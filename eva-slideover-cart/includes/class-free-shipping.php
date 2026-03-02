@@ -48,12 +48,12 @@ class EVA_SC_Free_Shipping {
 		$percent   = min( 100, (int) round( ( $current / $threshold ) * 100 ) );
 
 		if ( $remaining <= 0 ) {
-			$message = esc_html__( 'You have free shipping!', 'eva-slideover-cart' );
+			$message = esc_html__( 'Hai la spedizione gratuita!', 'eva-slideover-cart' );
 			$percent = 100;
 		} else {
 			$message = sprintf(
 				/* translators: %s: formatted price amount */
-				esc_html__( 'Add %s more for free shipping', 'eva-slideover-cart' ),
+				esc_html__( 'Aggiungi ancora %s per la spedizione gratuita', 'eva-slideover-cart' ),
 				wp_kses_post( wc_price( $remaining ) )
 			);
 		}

@@ -25,15 +25,15 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 	role="dialog"
 	aria-modal="true"
 	aria-hidden="true"
-	aria-label="<?php esc_attr_e( 'Shopping cart', 'eva-slideover-cart' ); ?>"
+	aria-label="<?php esc_attr_e( 'Carrello', 'eva-slideover-cart' ); ?>"
 >
 	<?php do_action( 'eva_sc_before_drawer_header' ); ?>
 
 	<!-- Drawer header -->
 	<div class="eva-sc-header">
 		<?php
-		$header_html = '<h2 class="eva-sc-title">' . esc_html__( 'Cart', 'eva-slideover-cart' ) . '</h2>'
-			. '<button class="eva-sc-close" aria-label="' . esc_attr__( 'Close cart', 'eva-slideover-cart' ) . '">'
+		$header_html = '<h2 class="eva-sc-title">' . esc_html__( 'Carrello', 'eva-slideover-cart' ) . '</h2>'
+			. '<button class="eva-sc-close" aria-label="' . esc_attr__( 'Chiudi carrello', 'eva-slideover-cart' ) . '">'
 			. '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">'
 			. '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
 			. '</svg>'
@@ -66,12 +66,12 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 	<div class="eva-sc-footer-bar">
 		<?php
 		$footer_html = '<div class="eva-sc-subtotal">'
-			. '<span class="eva-sc-subtotal-label">' . esc_html__( 'Subtotal', 'eva-slideover-cart' ) . '</span>'
+			. '<span class="eva-sc-subtotal-label">' . esc_html__( 'Subtotale', 'eva-slideover-cart' ) . '</span>'
 			. '<span class="eva-sc-subtotal-amount">' . wp_kses_post( wc_price( WC()->cart->get_subtotal() ) ) . '</span>'
 			. '</div>'
 			. '<div class="eva-sc-actions">'
-			. '<a href="' . esc_url( wc_get_cart_url() ) . '" class="eva-sc-btn eva-sc-btn--secondary">' . esc_html__( 'View cart', 'eva-slideover-cart' ) . '</a>'
-			. '<a href="' . esc_url( wc_get_checkout_url() ) . '" class="eva-sc-btn eva-sc-btn--primary">' . esc_html__( 'Checkout', 'eva-slideover-cart' ) . '</a>'
+			. '<a href="' . esc_url( wc_get_cart_url() ) . '" class="eva-sc-btn eva-sc-btn--secondary">' . esc_html__( 'Vai al carrello', 'eva-slideover-cart' ) . '</a>'
+			. '<a href="' . esc_url( wc_get_checkout_url() ) . '" class="eva-sc-btn eva-sc-btn--primary">' . esc_html__( 'Vai alla cassa', 'eva-slideover-cart' ) . '</a>'
 			. '</div>';
 		echo wp_kses_post( apply_filters( 'eva_sc_drawer_footer', $footer_html ) );
 		?>

@@ -52,7 +52,7 @@ class EVA_SC_Fragments {
 		$count = WC()->cart->get_cart_contents_count();
 		ob_start();
 		?>
-		<span class="eva-sc-count" aria-label="<?php esc_attr_e( 'Cart items', 'eva-slideover-cart' ); ?>"><?php echo esc_html( (string) $count ); ?></span>
+		<span class="eva-sc-count" aria-label="<?php esc_attr_e( 'Articoli nel carrello', 'eva-slideover-cart' ); ?>"><?php echo esc_html( (string) $count ); ?></span>
 		<?php
 		return (string) ob_get_clean();
 	}
@@ -84,7 +84,7 @@ class EVA_SC_Fragments {
 		ob_start();
 		?>
 		<div class="eva-sc-subtotal">
-			<span class="eva-sc-subtotal-label"><?php esc_html_e( 'Subtotal', 'eva-slideover-cart' ); ?></span>
+			<span class="eva-sc-subtotal-label"><?php esc_html_e( 'Subtotale', 'eva-slideover-cart' ); ?></span>
 			<span class="eva-sc-subtotal-amount"><?php echo wp_kses_post( wc_price( WC()->cart->get_subtotal() ) ); ?></span>
 		</div>
 		<?php

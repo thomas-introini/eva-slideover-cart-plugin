@@ -63,7 +63,7 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 				<button
 					class="eva-sc-qty-btn eva-sc-qty-minus"
 					data-key="<?php echo esc_attr( $cart_item_key ); ?>"
-					aria-label="<?php esc_attr_e( 'Decrease quantity', 'eva-slideover-cart' ); ?>"
+					aria-label="<?php esc_attr_e( 'Diminuisci quantita', 'eva-slideover-cart' ); ?>"
 					type="button"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><line x1="2" y1="8" x2="14" y2="8"/></svg>
@@ -78,7 +78,7 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 					<?php endif; ?>
 					step="1"
 					data-key="<?php echo esc_attr( $cart_item_key ); ?>"
-					aria-label="<?php esc_attr_e( 'Quantity', 'eva-slideover-cart' ); ?>"
+					aria-label="<?php esc_attr_e( 'Quantita', 'eva-slideover-cart' ); ?>"
 				>
 				<button
 					class="eva-sc-qty-btn eva-sc-qty-plus"
@@ -86,7 +86,7 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 					<?php if ( '' !== $max_qty ) : ?>
 					data-max="<?php echo esc_attr( (string) $max_qty ); ?>"
 					<?php endif; ?>
-					aria-label="<?php esc_attr_e( 'Increase quantity', 'eva-slideover-cart' ); ?>"
+					aria-label="<?php esc_attr_e( 'Aumenta quantita', 'eva-slideover-cart' ); ?>"
 					type="button"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
@@ -98,7 +98,7 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 		<button
 			class="eva-sc-remove"
 			data-key="<?php echo esc_attr( $cart_item_key ); ?>"
-			aria-label="<?php echo esc_attr( sprintf( __( 'Remove %s from cart', 'eva-slideover-cart' ), $product->get_name() ) ); ?>"
+			aria-label="<?php echo esc_attr( sprintf( __( 'Rimuovi %s dal carrello', 'eva-slideover-cart' ), $product->get_name() ) ); ?>"
 			type="button"
 		>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

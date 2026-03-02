@@ -245,12 +245,12 @@ html.eva-sc-locked {
 }
 
 .eva-sc-item-name a {
-  color: var(--eva-sc-color-text);
+  color: var(--eva-sc-color-bg);
   text-decoration: none;
 }
 
 .eva-sc-item-name a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .eva-sc-item-variation {
@@ -454,7 +454,7 @@ html.eva-sc-locked {
 
 .eva-sc-btn--primary {
   background: var(--eva-sc-color-primary);
-  color: var(--eva-sc-color-primary-fg);
+  color: var(--eva-sc-color-primary-fg) !important;
   border-color: var(--eva-sc-color-primary);
 }
 
@@ -463,6 +463,7 @@ html.eva-sc-locked {
   background: #e74538; /* --brand-color-hover */
   border-color: #e74538;
   color: var(--eva-sc-color-primary-fg);
+  text-decoration: none;
 }
 
 .eva-sc-btn--secondary {

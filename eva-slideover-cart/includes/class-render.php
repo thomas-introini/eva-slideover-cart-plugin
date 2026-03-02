@@ -52,9 +52,9 @@ class EVA_SC_Render {
 
 		ob_start();
 		?>
-		<button class="eva-sc-trigger" aria-label="<?php esc_attr_e( 'Open cart', 'eva-slideover-cart' ); ?>" aria-expanded="false" aria-controls="eva-sc-drawer">
+		<button class="eva-sc-trigger" aria-label="<?php esc_attr_e( 'Apri carrello', 'eva-slideover-cart' ); ?>" aria-expanded="false" aria-controls="eva-sc-drawer">
 			<?php echo wp_kses( $icon_html, eva_sc_trigger_icon_allowed_html() ); ?>
-			<span class="eva-sc-count" aria-label="<?php esc_attr_e( 'Cart items', 'eva-slideover-cart' ); ?>"><?php echo esc_html( (string) $count ); ?></span>
+			<span class="eva-sc-count" aria-label="<?php esc_attr_e( 'Articoli nel carrello', 'eva-slideover-cart' ); ?>"><?php echo esc_html( (string) $count ); ?></span>
 		</button>
 		<?php
 		$html = ob_get_clean();

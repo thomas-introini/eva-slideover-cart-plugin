@@ -62,11 +62,11 @@ class EVA_SC_Assets {
 				'wcCartUrl'    => wc_get_cart_url(),
 				'wcCheckoutUrl' => wc_get_checkout_url(),
 				'i18n'         => [
-					'removing'     => __( 'Removing…', 'eva-slideover-cart' ),
-					'updating'     => __( 'Updating…', 'eva-slideover-cart' ),
-					'errorGeneric' => __( 'Something went wrong. Please try again.', 'eva-slideover-cart' ),
-					'openCart'     => __( 'Open cart', 'eva-slideover-cart' ),
-					'closeCart'    => __( 'Close cart', 'eva-slideover-cart' ),
+					'removing'     => __( 'Rimozione...', 'eva-slideover-cart' ),
+					'updating'     => __( 'Aggiornamento...', 'eva-slideover-cart' ),
+					'errorGeneric' => __( 'Qualcosa e andato storto. Riprova.', 'eva-slideover-cart' ),
+					'openCart'     => __( 'Apri carrello', 'eva-slideover-cart' ),
+					'closeCart'    => __( 'Chiudi carrello', 'eva-slideover-cart' ),
 				],
 			]
 		);

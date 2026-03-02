@@ -13,8 +13,8 @@ defined( 'ABSPATH' ) || exit;
 		<circle cx="27" cy="52" r="3" fill="currentColor"/>
 		<circle cx="43" cy="52" r="3" fill="currentColor"/>
 	</svg>
-	<p class="eva-sc-empty-msg"><?php esc_html_e( 'Your cart is empty.', 'eva-slideover-cart' ); ?></p>
+	<p class="eva-sc-empty-msg"><?php esc_html_e( 'Il tuo carrello e vuoto.', 'eva-slideover-cart' ); ?></p>
 	<a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="eva-sc-btn eva-sc-btn--primary">
-		<?php esc_html_e( 'Continue shopping', 'eva-slideover-cart' ); ?>
+		<?php esc_html_e( 'Continua gli acquisti', 'eva-slideover-cart' ); ?>
 	</a>
 </div>
