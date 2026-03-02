@@ -1,0 +1,23 @@
+# OS / Editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+*.zip
+_build_stage/
+eva-slideover-cart/_build_stage/

@@ -1,0 +1,28 @@
+# Build output
+*.zip
+_build_stage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies (if added later)
+node_modules/
+vendor/
+
+# Composer
+composer.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
