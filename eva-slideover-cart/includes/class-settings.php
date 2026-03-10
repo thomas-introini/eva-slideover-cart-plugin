@@ -102,6 +102,18 @@ class EVA_SC_Settings {
 			]
 		);
 
+		add_settings_field(
+			'free_shipping_excluded_classes',
+			__( 'Excluded Shipping Classes', 'eva-slideover-cart' ),
+			[ $this, 'field_shipping_classes' ],
+			self::PAGE_SLUG,
+			self::SECTION_GENERAL,
+			[
+				'key'         => 'free_shipping_excluded_classes',
+				'description' => __( 'Products with these shipping classes already include shipping. When every item in the cart belongs to one of these classes, the progress bar will show "free shipping" immediately.', 'eva-slideover-cart' ),
+			]
+		);
+
 		// --- Disable theme cart section ---
 		add_settings_section(
 			self::SECTION_DISABLE,
@@ -176,6 +188,13 @@ class EVA_SC_Settings {
 			? (float) $input['free_shipping_threshold']
 			: $defaults['free_shipping_threshold'];
 
+		$raw_classes = isset( $input['free_shipping_excluded_classes'] ) && is_array( $input['free_shipping_excluded_classes'] )
+			? $input['free_shipping_excluded_classes']
+			: [];
+		$output['free_shipping_excluded_classes'] = array_values(
+			array_filter( array_map( 'sanitize_key', $raw_classes ) )
+		);
+
 		foreach ( [ 'theme_mod_keys', 'action_callbacks', 'hide_selectors' ] as $textarea_key ) {
 			$raw_text        = isset( $input[ $textarea_key ] ) ? (string) $input[ $textarea_key ] : '';
 			$lines           = explode( "\n", $raw_text );
@@ -249,6 +268,41 @@ class EVA_SC_Settings {
 			esc_attr( (string) $min ),
 			esc_attr( (string) $step )
 		);
+		if ( ! empty( $args['description'] ) ) {
+			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
+		}
+	}
+
+	/**
+	 * Render a list of WooCommerce shipping class checkboxes.
+	 *
+	 * @param array<string, mixed> $args Field arguments.
+	 */
+	public function field_shipping_classes( array $args ): void {
+		$key     = $args['key'];
+		$saved   = (array) eva_sc_get_option( $key, [] );
+		$classes = function_exists( 'WC' ) && WC()->shipping() ? WC()->shipping()->get_shipping_classes() : [];
+
+		if ( empty( $classes ) ) {
+			echo '<p class="description">' . esc_html__( 'No shipping classes found. Create them under WooCommerce → Settings → Shipping → Shipping classes.', 'eva-slideover-cart' ) . '</p>';
+		} else {
+			echo '<fieldset>';
+			foreach ( $classes as $class ) {
+				$slug    = $class->slug;
+				$label   = $class->name;
+				$checked = in_array( $slug, $saved, true );
+				printf(
+					'<label style="display:block;margin-bottom:4px"><input type="checkbox" name="%1$s[%2$s][]" value="%3$s"%4$s> %5$s</label>',
+					esc_attr( self::OPTION_KEY ),
+					esc_attr( $key ),
+					esc_attr( $slug ),
+					checked( $checked, true, false ),
+					esc_html( $label )
+				);
+			}
+			echo '</fieldset>';
+		}
+
 		if ( ! empty( $args['description'] ) ) {
 			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
 		}

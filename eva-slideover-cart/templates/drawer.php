@@ -25,7 +25,7 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 	role="dialog"
 	aria-modal="true"
 	aria-hidden="true"
-	aria-label="<?php esc_attr_e( 'Carrello', 'eva-slideover-cart' ); ?>"
+	aria-label="<?php esc_attr_e( 'Il tuo carrello', 'eva-slideover-cart' ); ?>"
 >
 	<?php do_action( 'eva_sc_before_drawer_header' ); ?>
 
@@ -38,7 +38,14 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 			. '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
 			. '</svg>'
 			. '</button>';
-		echo wp_kses_post( apply_filters( 'eva_sc_drawer_header', $header_html ) );
+		$header_kses = array_merge(
+			wp_kses_allowed_html( 'post' ),
+			[
+				'svg'  => [ 'xmlns' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'aria-hidden' => true, 'focusable' => true ],
+				'line' => [ 'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true ],
+			]
+		);
+		echo wp_kses( apply_filters( 'eva_sc_drawer_header', $header_html ), $header_kses );
 		?>
 	</div>
 
@@ -67,7 +74,7 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 		<?php
 		$footer_html = '<div class="eva-sc-subtotal">'
 			. '<span class="eva-sc-subtotal-label">' . esc_html__( 'Subtotale', 'eva-slideover-cart' ) . '</span>'
-			. '<span class="eva-sc-subtotal-amount">' . wp_kses_post( wc_price( WC()->cart->get_subtotal() ) ) . '</span>'
+			. '<span class="eva-sc-subtotal-amount">' . wp_kses_post( WC()->cart->get_cart_subtotal() ) . '</span>'
 			. '</div>'
 			. '<div class="eva-sc-actions">'
 			. '<a href="' . esc_url( wc_get_cart_url() ) . '" class="eva-sc-btn eva-sc-btn--secondary">' . esc_html__( 'Vai al carrello', 'eva-slideover-cart' ) . '</a>'

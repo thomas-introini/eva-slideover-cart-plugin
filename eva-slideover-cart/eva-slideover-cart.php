@@ -3,7 +3,7 @@
  * Plugin Name:       Eva Slideover Cart
  * Plugin URI:        https://github.com/your-org/eva-slideover-cart
  * Description:       A UI-only slideover (drawer) cart for WooCommerce. Replaces the theme mini-cart without touching WooCommerce checkout/order logic.
- * Version:           1.0.5
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            Thomas Introini
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'EVA_SC_VERSION', '1.0.5' );
+define( 'EVA_SC_VERSION', '1.1.0' );
 define( 'EVA_SC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'EVA_SC_URL', plugin_dir_url( __FILE__ ) );
 define( 'EVA_SC_BASENAME', plugin_basename( __FILE__ ) );

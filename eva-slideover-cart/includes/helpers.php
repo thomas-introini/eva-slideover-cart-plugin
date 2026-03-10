@@ -14,12 +14,13 @@ defined( 'ABSPATH' ) || exit;
  */
 function eva_sc_option_defaults(): array {
 	return [
-		'enabled'                => true,
-		'free_shipping_threshold' => 0.0,
-		'open_on_add_to_cart'    => true,
-		'theme_mod_keys'         => [],
-		'action_callbacks'       => [],
-		'hide_selectors'         => [],
+		'enabled'                          => true,
+		'free_shipping_threshold'          => 0.0,
+		'free_shipping_excluded_classes'   => [],
+		'open_on_add_to_cart'              => true,
+		'theme_mod_keys'                   => [],
+		'action_callbacks'                 => [],
+		'hide_selectors'                   => [],
 	];
 }
 

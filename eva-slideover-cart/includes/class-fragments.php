@@ -85,7 +85,7 @@ class EVA_SC_Fragments {
 		?>
 		<div class="eva-sc-subtotal">
 			<span class="eva-sc-subtotal-label"><?php esc_html_e( 'Subtotale', 'eva-slideover-cart' ); ?></span>
-			<span class="eva-sc-subtotal-amount"><?php echo wp_kses_post( wc_price( WC()->cart->get_subtotal() ) ); ?></span>
+			<span class="eva-sc-subtotal-amount"><?php echo wp_kses_post( WC()->cart->get_cart_subtotal() ); ?></span>
 		</div>
 		<?php
 		return (string) ob_get_clean();

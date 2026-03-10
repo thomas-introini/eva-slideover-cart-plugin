@@ -39,6 +39,41 @@ class EVA_SC_Free_Shipping {
 			return '';
 		}
 
+		// If every item in the cart belongs to a shipping-included class, show
+		// the success state immediately without checking the subtotal threshold.
+		$excluded_classes = (array) apply_filters(
+			'eva_sc_free_shipping_excluded_classes',
+			eva_sc_get_option( 'free_shipping_excluded_classes', [] )
+		);
+
+		if ( ! empty( $excluded_classes ) && ! WC()->cart->is_empty() ) {
+			$all_excluded = true;
+			foreach ( WC()->cart->get_cart() as $cart_item ) {
+				/** @var WC_Product $product */
+				$product = $cart_item['data'];
+				if ( ! in_array( $product->get_shipping_class(), $excluded_classes, true ) ) {
+					$all_excluded = false;
+					break;
+				}
+			}
+
+			if ( $all_excluded ) {
+				$message = esc_html__( 'Hai la spedizione gratuita!', 'eva-slideover-cart' );
+				ob_start();
+				?>
+				<div class="eva-sc-free-shipping" aria-live="polite">
+					<div class="eva-sc-progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+						<div class="eva-sc-progress-fill" style="width:100%"></div>
+					</div>
+					<p class="eva-sc-progress-msg"><?php echo $message; // Already escaped above. ?></p>
+				</div>
+				<?php
+				$html = ob_get_clean();
+
+				return (string) apply_filters( 'eva_sc_free_shipping_html', $html, 0.0, $threshold, 0.0, 100 );
+			}
+		}
+
 		$current = (float) apply_filters(
 			'eva_sc_free_shipping_current_amount',
 			WC()->cart->get_displayed_subtotal()

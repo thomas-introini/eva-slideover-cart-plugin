@@ -21,7 +21,7 @@
   --eva-sc-color-overlay: rgba(74, 57, 51, 0.55); /* --background-dark-color */
   --eva-sc-color-border: #ead9cc; /* warm cream border */
   --eva-sc-color-text: #4a3933; /* --text-color */
-  --eva-sc-color-muted: #9c7c74; /* lightened --text-color */
+  --eva-sc-color-muted: #4a3933; /* --text-color */
   --eva-sc-color-primary: #e45826; /* --brand-color */
   --eva-sc-color-primary-fg: #fef4ee; /* --background-color */
   --eva-sc-color-secondary: #ffd7c6; /* --hover-bg */
@@ -270,8 +270,6 @@ html.eva-sc-locked {
 .eva-sc-qty-wrap {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--eva-sc-color-border);
-  border-radius: var(--eva-sc-radius-sm);
   overflow: hidden;
 }
 
