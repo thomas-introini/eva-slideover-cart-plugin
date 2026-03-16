@@ -42,6 +42,11 @@ class EVA_SC_Render {
 	 */
 	public function get_trigger_html(): string {
 		$count = function_exists( 'WC' ) && WC()->cart ? WC()->cart->get_cart_contents_count() : 0;
+		$count_label = sprintf(
+			/* translators: %d: number of items in cart */
+			esc_attr( _n( '%d articolo nel carrello', '%d articoli nel carrello', $count, 'eva-slideover-cart' ) ),
+			$count
+		);
 
 		$default_icon = '<svg class="eva-sc-trigger-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">'
 			. '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>'
@@ -54,7 +59,7 @@ class EVA_SC_Render {
 		?>
 		<button class="eva-sc-trigger" aria-label="<?php esc_attr_e( 'Apri carrello', 'eva-slideover-cart' ); ?>" aria-expanded="false" aria-controls="eva-sc-drawer">
 			<?php echo wp_kses( $icon_html, eva_sc_trigger_icon_allowed_html() ); ?>
-			<span class="eva-sc-count" aria-label="<?php esc_attr_e( 'Articoli nel carrello', 'eva-slideover-cart' ); ?>"><?php echo esc_html( (string) $count ); ?></span>
+			<span class="eva-sc-count" aria-label="<?php echo esc_attr( $count_label ); ?>"><?php echo esc_html( (string) $count ); ?></span>
 		</button>
 		<?php
 		$html = ob_get_clean();

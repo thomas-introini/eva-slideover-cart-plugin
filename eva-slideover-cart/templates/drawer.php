@@ -51,6 +51,14 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 
 	<?php do_action( 'eva_sc_after_drawer_header' ); ?>
 
+	<p class="eva-sc-sr-only eva-sc-status-live" role="status" aria-live="polite" aria-atomic="true"></p>
+	<div class="eva-sc-alert" role="alert" hidden>
+		<p class="eva-sc-alert-text" dir="auto"></p>
+		<button type="button" class="eva-sc-alert-retry eva-sc-btn eva-sc-btn--secondary">
+			<?php esc_html_e( 'Riprova', 'eva-slideover-cart' ); ?>
+		</button>
+	</div>
+
 	<!-- Free shipping progress bar -->
 	<?php echo EVA_SC_Free_Shipping::render(); // phpcs:ignore WordPress.Security.EscapeOutput -- render() returns escaped HTML. ?>
 

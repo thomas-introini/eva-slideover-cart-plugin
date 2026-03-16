@@ -22,11 +22,9 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 	$product_url  = get_permalink( $product->get_id() );
 	$thumbnail    = $product->get_image( 'woocommerce_thumbnail', [ 'class' => 'eva-sc-item-thumb-img' ] );
 
-	// Stock-aware max quantity.
-	$max_qty = '';
-	if ( $product->managing_stock() && ! $product->backorders_allowed() ) {
-		$max_qty = $product->get_stock_quantity() ?? '';
-	}
+	// Max allowed quantity can vary by product type, stock rules, and purchase limits.
+	$max_qty = $product->get_max_purchase_quantity();
+	$max_qty = is_numeric( $max_qty ) && (int) $max_qty > 0 ? (int) $max_qty : '';
 
 	// Variation data.
 	$variation_html = '';
@@ -49,11 +47,11 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 		<!-- Details -->
 		<div class="eva-sc-item-details">
 			<p class="eva-sc-item-name">
-				<a href="<?php echo esc_url( $product_url ); ?>"><?php echo esc_html( $product->get_name() ); ?></a>
+				<a href="<?php echo esc_url( $product_url ); ?>" dir="auto"><?php echo esc_html( $product->get_name() ); ?></a>
 			</p>
 
 			<?php if ( $variation_html ) : ?>
-				<div class="eva-sc-item-variation"><?php echo wp_kses_post( $variation_html ); ?></div>
+				<div class="eva-sc-item-variation" dir="auto"><?php echo wp_kses_post( $variation_html ); ?></div>
 			<?php endif; ?>
 
 			<p class="eva-sc-item-price"><?php echo wp_kses_post( $line_price ); ?></p>
@@ -71,6 +69,7 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 				<input
 					class="eva-sc-qty-input"
 					type="number"
+					inputmode="numeric"
 					value="<?php echo esc_attr( (string) $qty ); ?>"
 					min="1"
 					<?php if ( '' !== $max_qty ) : ?>

@@ -11,25 +11,54 @@
   --eva-sc-z-drawer: 999999;
   --eva-sc-drawer-width: 420px;
   --eva-sc-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --eva-sc-transition-fast: 0.15s;
+  --eva-sc-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --eva-sc-radius: 12px;
   --eva-sc-radius-sm: 6px;
   --eva-sc-spacing: 16px;
   --eva-sc-spacing-sm: 10px;
   --eva-sc-spacing-xs: 6px;
+  --eva-sc-touch-target: 44px;
+  --eva-sc-focus-ring-width: 2px;
+  --eva-sc-focus-ring-offset: 2px;
+
+  --eva-sc-font-size-xs: 0.8125rem;
+  --eva-sc-font-size-sm: 0.875rem;
+  --eva-sc-font-size-md: 0.9375rem;
+  --eva-sc-font-size-lg: 1rem;
+  --eva-sc-font-size-xl: 1.125rem;
 
   --eva-sc-color-bg: #fef4ee; /* --background-color */
   --eva-sc-color-overlay: rgba(74, 57, 51, 0.55); /* --background-dark-color */
   --eva-sc-color-border: #ead9cc; /* warm cream border */
   --eva-sc-color-text: #4a3933; /* --text-color */
   --eva-sc-color-muted: #4a3933; /* --text-color */
-  --eva-sc-color-primary: #e45826; /* --brand-color */
+  --eva-sc-color-primary: #bf4318; /* --brand-color (AA with light foreground) */
   --eva-sc-color-primary-fg: #fef4ee; /* --background-color */
   --eva-sc-color-secondary: #ffd7c6; /* --hover-bg */
   --eva-sc-color-secondary-fg: #4a3933; /* --text-color */
   --eva-sc-color-progress-track: #ead9cc;
-  --eva-sc-color-progress-fill: #e45826; /* --brand-color */
+  --eva-sc-color-progress-fill: #bf4318; /* --brand-color */
   --eva-sc-color-danger: #e74538; /* --brand-color-hover */
+  --eva-sc-color-primary-hover: #a83a14; /* --brand-color-hover */
+  --eva-sc-color-loading-overlay: rgba(254, 244, 238, 0.72);
+  --eva-sc-color-shadow: rgba(74, 57, 51, 0.22);
+  --eva-sc-color-alert-bg: #fff3ec;
+  --eva-sc-color-alert-border: #f0b29a;
+  --eva-sc-color-alert-fg: #4a3933;
   --eva-sc-thumb-size: 64px;
+}
+
+.eva-sc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -67,7 +96,7 @@ html.eva-sc-locked {
   position: fixed;
   top: 0;
   bottom: 0;
-  right: 0;
+  inset-inline-end: 0;
   width: var(--eva-sc-drawer-width);
   max-width: 100vw;
   background: var(--eva-sc-color-bg);
@@ -78,13 +107,14 @@ html.eva-sc-locked {
   transition: transform var(--eva-sc-transition);
   /* Respect iOS safe areas (notch / gesture bar) */
   padding-bottom: env(safe-area-inset-bottom, 0);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  box-shadow: -4px 0 24px var(--eva-sc-color-shadow);
 }
 
 .eva-sc-drawer--left {
-  right: auto;
-  left: 0;
+  inset-inline-end: auto;
+  inset-inline-start: 0;
   transform: translateX(-100%);
+  box-shadow: 4px 0 24px var(--eva-sc-color-shadow);
 }
 
 .eva-sc-drawer.eva-sc-open {
@@ -105,7 +135,7 @@ html.eva-sc-locked {
 
 .eva-sc-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: var(--eva-sc-font-size-xl);
   font-weight: 600;
   color: var(--eva-sc-color-text);
   line-height: 1.3;
@@ -117,16 +147,16 @@ html.eva-sc-locked {
   justify-content: center;
   width: 36px;
   height: 36px;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--eva-sc-touch-target);
+  min-height: var(--eva-sc-touch-target);
   border: none;
   background: none;
   cursor: pointer;
   color: var(--eva-sc-color-muted);
   border-radius: var(--eva-sc-radius-sm);
   transition:
-    color 0.15s,
-    background 0.15s;
+    color var(--eva-sc-transition-fast),
+    background var(--eva-sc-transition-fast);
   padding: 0;
 }
 
@@ -134,8 +164,8 @@ html.eva-sc-locked {
 .eva-sc-close:focus-visible {
   color: var(--eva-sc-color-text);
   background: var(--eva-sc-color-secondary);
-  outline: 2px solid var(--eva-sc-color-primary);
-  outline-offset: 2px;
+  outline: var(--eva-sc-focus-ring-width) solid var(--eva-sc-color-primary);
+  outline-offset: var(--eva-sc-focus-ring-offset);
 }
 
 .eva-sc-close svg {
@@ -166,14 +196,47 @@ html.eva-sc-locked {
   height: 100%;
   border-radius: 999px;
   background: var(--eva-sc-color-progress-fill);
-  transition: width 0.4s ease;
+  transition: width 0.4s var(--eva-sc-ease-standard);
 }
 
 .eva-sc-progress-msg {
   margin: var(--eva-sc-spacing-xs) 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--eva-sc-font-size-xs);
   color: var(--eva-sc-color-muted);
   line-height: 1.4;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* Alert and retry area */
+.eva-sc-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eva-sc-spacing-sm);
+  margin: var(--eva-sc-spacing-sm) var(--eva-sc-spacing) 0;
+  padding: var(--eva-sc-spacing-sm);
+  border: 1px solid var(--eva-sc-color-alert-border);
+  background: var(--eva-sc-color-alert-bg);
+  border-radius: var(--eva-sc-radius-sm);
+}
+
+.eva-sc-alert[hidden] {
+  display: none;
+}
+
+.eva-sc-alert-text {
+  margin: 0;
+  font-size: var(--eva-sc-font-size-sm);
+  line-height: 1.4;
+  color: var(--eva-sc-color-alert-fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.eva-sc-alert-retry {
+  flex: 0 0 auto;
+  min-height: 44px;
 }
 
 /* --------------------------------------------------------------------------
@@ -208,7 +271,7 @@ html.eva-sc-locked {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--eva-sc-color-loading-overlay);
 }
 
 /* Thumbnail */
@@ -237,15 +300,20 @@ html.eva-sc-locked {
 
 .eva-sc-item-name {
   margin: 0 0 2px;
-  font-size: 0.9rem;
+  font-size: var(--eva-sc-font-size-sm);
   font-weight: 500;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  unicode-bidi: plaintext;
 }
 
 .eva-sc-item-name a {
-  color: var(--eva-sc-color-bg);
+  color: var(--eva-sc-color-text);
   text-decoration: none;
 }
 
@@ -254,14 +322,17 @@ html.eva-sc-locked {
 }
 
 .eva-sc-item-variation {
-  font-size: 0.8125rem;
+  font-size: var(--eva-sc-font-size-xs);
   color: var(--eva-sc-color-muted);
   margin: 0 0 4px;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  unicode-bidi: plaintext;
 }
 
 .eva-sc-item-price {
   margin: 0 0 var(--eva-sc-spacing-xs);
-  font-size: 0.9rem;
+  font-size: var(--eva-sc-font-size-sm);
   font-weight: 600;
   color: var(--eva-sc-color-text);
 }
@@ -279,13 +350,13 @@ html.eva-sc-locked {
   justify-content: center;
   width: 32px;
   height: 32px;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--eva-sc-touch-target);
+  min-height: var(--eva-sc-touch-target);
   border: none;
   background: none;
   cursor: pointer;
   color: var(--eva-sc-color-text);
-  transition: background 0.15s;
+  transition: background var(--eva-sc-transition-fast);
   flex-shrink: 0;
 }
 
@@ -304,20 +375,22 @@ html.eva-sc-locked {
 }
 
 .eva-sc-qty-btn:focus-visible {
-  outline: 2px solid var(--eva-sc-color-primary);
+  outline: var(--eva-sc-focus-ring-width) solid var(--eva-sc-color-primary);
   outline-offset: -2px;
 }
 
 .eva-sc-qty-input {
-  width: 40px;
+  width: 44px;
+  min-width: var(--eva-sc-touch-target);
+  min-height: var(--eva-sc-touch-target);
   border: none;
-  border-left: 1px solid var(--eva-sc-color-border);
-  border-right: 1px solid var(--eva-sc-color-border);
+  border-inline-start: 1px solid var(--eva-sc-color-border);
+  border-inline-end: 1px solid var(--eva-sc-color-border);
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--eva-sc-font-size-sm);
   font-weight: 500;
   padding: 0;
-  height: 32px;
+  height: var(--eva-sc-touch-target);
   background: transparent;
   color: var(--eva-sc-color-text);
   -moz-appearance: textfield;
@@ -336,16 +409,16 @@ html.eva-sc-locked {
   justify-content: center;
   width: 28px;
   height: 28px;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: var(--eva-sc-touch-target);
+  min-height: var(--eva-sc-touch-target);
   border: none;
   background: none;
   cursor: pointer;
   color: var(--eva-sc-color-muted);
   border-radius: var(--eva-sc-radius-sm);
   transition:
-    color 0.15s,
-    background 0.15s;
+    color var(--eva-sc-transition-fast),
+    background var(--eva-sc-transition-fast);
   padding: 0;
   margin-top: 2px;
 }
@@ -360,13 +433,13 @@ html.eva-sc-locked {
 .eva-sc-remove:hover,
 .eva-sc-remove:focus-visible {
   color: var(--eva-sc-color-danger);
-  background: #ffd7c6; /* --hover-bg, warm peach on remove hover */
+  background: var(--eva-sc-color-secondary);
   outline: none;
 }
 
 .eva-sc-remove:focus-visible {
-  outline: 2px solid var(--eva-sc-color-danger);
-  outline-offset: 2px;
+  outline: var(--eva-sc-focus-ring-width) solid var(--eva-sc-color-danger);
+  outline-offset: var(--eva-sc-focus-ring-offset);
 }
 
 /* --------------------------------------------------------------------------
@@ -390,7 +463,7 @@ html.eva-sc-locked {
 
 .eva-sc-empty-msg {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--eva-sc-font-size-lg);
   color: var(--eva-sc-color-muted);
 }
 
@@ -409,7 +482,7 @@ html.eva-sc-locked {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--eva-sc-spacing-sm);
-  font-size: 0.9375rem;
+  font-size: var(--eva-sc-font-size-md);
 }
 
 .eva-sc-subtotal-label {
@@ -436,18 +509,20 @@ html.eva-sc-locked {
   flex: 1;
   padding: 13px var(--eva-sc-spacing);
   border-radius: var(--eva-sc-radius-sm);
-  font-size: 0.9375rem;
+  font-size: var(--eva-sc-font-size-md);
   font-weight: 600;
   text-decoration: none;
   text-align: center;
   cursor: pointer;
   border: 2px solid transparent;
   transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
+    background var(--eva-sc-transition-fast),
+    color var(--eva-sc-transition-fast),
+    border-color var(--eva-sc-transition-fast);
   line-height: 1.2;
   min-height: 48px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .eva-sc-btn--primary {
@@ -458,8 +533,8 @@ html.eva-sc-locked {
 
 .eva-sc-btn--primary:hover,
 .eva-sc-btn--primary:focus-visible {
-  background: #e74538; /* --brand-color-hover */
-  border-color: #e74538;
+  background: var(--eva-sc-color-primary-hover);
+  border-color: var(--eva-sc-color-primary-hover);
   color: var(--eva-sc-color-primary-fg);
   text-decoration: none;
 }
@@ -477,8 +552,8 @@ html.eva-sc-locked {
 }
 
 .eva-sc-btn:focus-visible {
-  outline: 2px solid var(--eva-sc-color-primary);
-  outline-offset: 2px;
+  outline: var(--eva-sc-focus-ring-width) solid var(--eva-sc-color-primary);
+  outline-offset: var(--eva-sc-focus-ring-offset);
 }
 
 /* --------------------------------------------------------------------------
@@ -506,8 +581,8 @@ html.eva-sc-locked {
 }
 
 .eva-sc-trigger:focus-visible {
-  outline: 2px solid var(--eva-sc-color-primary);
-  outline-offset: 2px;
+  outline: var(--eva-sc-focus-ring-width) solid var(--eva-sc-color-primary);
+  outline-offset: var(--eva-sc-focus-ring-offset);
   border-radius: var(--eva-sc-radius-sm);
 }
 
@@ -542,7 +617,7 @@ html.eva-sc-locked {
 .eva-sc-count {
   position: absolute;
   top: 2px;
-  right: 2px;
+  inset-inline-end: 2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -570,8 +645,8 @@ html.eva-sc-locked {
   .eva-sc-qty-btn,
   .eva-sc-remove,
   .eva-sc-close {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: var(--eva-sc-touch-target);
+    min-height: var(--eva-sc-touch-target);
   }
 
   .eva-sc-btn {
@@ -589,8 +664,6 @@ html.eva-sc-locked {
     border-radius: 0;
     box-shadow: none;
   }
-
-  --eva-sc-thumb-size: 48px;
 
   .eva-sc-item-thumb {
     width: 48px;
@@ -615,6 +688,19 @@ html.eva-sc-locked {
   }
 
   .eva-sc-qty-input {
-    width: 36px;
+    width: var(--eva-sc-touch-target);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eva-sc-overlay,
+  .eva-sc-drawer,
+  .eva-sc-progress-fill,
+  .eva-sc-item,
+  .eva-sc-btn,
+  .eva-sc-close,
+  .eva-sc-remove,
+  .eva-sc-qty-btn {
+    transition: none !important;
   }
 }

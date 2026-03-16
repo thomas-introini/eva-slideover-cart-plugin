@@ -19,12 +19,67 @@
 	var nonce     = data.nonce     || '';
 	var openOnAdd = !! data.openOnAdd;
 	var i18n      = data.i18n      || {};
+	var requestTimeout = parseInt( data.requestTimeout, 10 ) || 15000;
+	var drawerPosition = data.position === 'left' ? 'left' : 'right';
 
 	var overlay = document.querySelector( '.eva-sc-overlay' );
 	var drawer  = document.getElementById( 'eva-sc-drawer' );
+	var statusLive = drawer ? drawer.querySelector( '.eva-sc-status-live' ) : null;
+	var alertBox = drawer ? drawer.querySelector( '.eva-sc-alert' ) : null;
+	var alertText = drawer ? drawer.querySelector( '.eva-sc-alert-text' ) : null;
+	var alertRetryBtn = drawer ? drawer.querySelector( '.eva-sc-alert-retry' ) : null;
+
+	var pendingRequests = {};
+	var retryAction = null;
 
 	if ( ! overlay || ! drawer ) {
 		return;
+	}
+
+	if ( alertRetryBtn ) {
+		alertRetryBtn.textContent = i18n.retry || 'Retry';
+	}
+
+	function announceStatus( message ) {
+		if ( ! statusLive || ! message ) {
+			return;
+		}
+		statusLive.textContent = '';
+		window.setTimeout( function () {
+			statusLive.textContent = message;
+		}, 20 );
+	}
+
+	function showAlert( message, onRetry ) {
+		if ( ! alertBox || ! alertText ) {
+			return;
+		}
+		alertText.textContent = message || i18n.errorGeneric || 'Something went wrong.';
+		alertBox.hidden = false;
+		retryAction = typeof onRetry === 'function' ? onRetry : null;
+		if ( alertRetryBtn ) {
+			alertRetryBtn.hidden = ! retryAction;
+		}
+	}
+
+	function hideAlert() {
+		if ( ! alertBox || ! alertText ) {
+			return;
+		}
+		alertBox.hidden = true;
+		alertText.textContent = '';
+		retryAction = null;
+	}
+
+	if ( alertRetryBtn ) {
+		alertRetryBtn.addEventListener( 'click', function () {
+			if ( ! retryAction ) {
+				return;
+			}
+			var run = retryAction;
+			hideAlert();
+			run();
+		} );
 	}
 
 	// Body scroll lock: record scroll position before locking.
@@ -120,8 +175,8 @@
 		}
 		var delta = e.changedTouches[ 0 ].clientX - touchStartX;
 		touchStartX = null;
-		// Swipe right > 80 px closes the drawer.
-		if ( delta > 80 ) {
+		// Swipe from drawer edge direction closes the panel.
+		if ( ( drawerPosition === 'right' && delta > 80 ) || ( drawerPosition === 'left' && delta < -80 ) ) {
 			closeDrawer();
 		}
 	}, { passive: true } );
@@ -183,10 +238,64 @@
 	// -------------------------------------------------------------------------
 	// AJAX helpers
 	// -------------------------------------------------------------------------
-	function cartAjax( action, params, itemRow ) {
-		if ( itemRow ) {
-			itemRow.classList.add( 'eva-sc-loading' );
+	function getStatusMessage( statusCode ) {
+		if ( statusCode === 400 ) {
+			return i18n.errorValidation || i18n.errorGeneric;
 		}
+		if ( statusCode === 401 || statusCode === 403 ) {
+			return i18n.errorPermission || i18n.errorGeneric;
+		}
+		if ( statusCode === 404 ) {
+			return i18n.errorNotFound || i18n.errorGeneric;
+		}
+		if ( statusCode === 429 ) {
+			return i18n.errorRateLimit || i18n.errorGeneric;
+		}
+		if ( statusCode >= 500 ) {
+			return i18n.errorServer || i18n.errorGeneric;
+		}
+		return i18n.errorGeneric;
+	}
+
+	function getErrorMessage( error, statusCode ) {
+		if ( typeof navigator !== 'undefined' && navigator.onLine === false ) {
+			return i18n.errorOffline || i18n.errorGeneric;
+		}
+		if ( error && error.name === 'AbortError' ) {
+			return i18n.errorTimeout || i18n.errorGeneric;
+		}
+		return getStatusMessage( statusCode || 0 );
+	}
+
+	function getRequestKey( action, params ) {
+		return action + ':' + ( params.cart_item_key || 'global' );
+	}
+
+	function setRowLoading( itemRow, isLoading ) {
+		if ( ! itemRow ) {
+			return;
+		}
+		itemRow.classList.toggle( 'eva-sc-loading', !! isLoading );
+		if ( isLoading ) {
+			itemRow.setAttribute( 'aria-busy', 'true' );
+		} else {
+			itemRow.removeAttribute( 'aria-busy' );
+		}
+	}
+
+	function cartAjax( action, params, itemRow ) {
+		var requestKey = getRequestKey( action, params );
+		if ( pendingRequests[ requestKey ] ) {
+			return pendingRequests[ requestKey ];
+		}
+
+		if ( ! ajaxUrl ) {
+			showAlert( i18n.errorConfig || i18n.errorGeneric );
+			return Promise.resolve();
+		}
+
+		hideAlert();
+		setRowLoading( itemRow, true );
 
 		var body = new URLSearchParams( {
 			action: action,
@@ -197,38 +306,95 @@
 			body.set( k, params[ k ] );
 		} );
 
-		return fetch( ajaxUrl, {
+		var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+		var timeoutId = null;
+		if ( controller ) {
+			timeoutId = window.setTimeout( function () {
+				controller.abort();
+			}, requestTimeout );
+		}
+
+		var fetchOptions = {
 			method:      'POST',
 			credentials: 'same-origin',
 			headers:     { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
 			body:        body.toString(),
-		} )
-			.then( function ( res ) { return res.json(); } )
-			.then( function ( json ) {
-				if ( itemRow ) {
-					itemRow.classList.remove( 'eva-sc-loading' );
+		};
+
+		if ( controller ) {
+			fetchOptions.signal = controller.signal;
+		}
+
+		var request = fetch( ajaxUrl, fetchOptions )
+			.then( function ( res ) {
+				return res.text().then( function ( text ) {
+					var json = null;
+					try {
+						json = JSON.parse( text );
+					} catch ( parseError ) {
+						json = null;
+					}
+					return {
+						res: res,
+						json: json,
+					};
+				} );
+			} )
+			.then( function ( payload ) {
+				var response = payload.res;
+				var json = payload.json;
+
+				if ( ! json || ! json.success || ! json.data || ! json.data.fragments ) {
+					var errorMessage = ( json && json.data && json.data.message ) || getStatusMessage( response.status );
+					showAlert( errorMessage, function () {
+						cartAjax( action, params, itemRow );
+					} );
+					console.warn( 'Eva SC:', errorMessage );
+					return json;
 				}
 
-				if ( json.success && json.data && json.data.fragments ) {
-					applyFragments( json.data.fragments );
-					triggerWooRefresh();
+				applyFragments( json.data.fragments );
+				triggerWooRefresh();
+
+				if ( action === 'eva_sc_remove_item' ) {
+					announceStatus( i18n.removedItem || i18n.updatedCart );
+				} else if ( action === 'eva_sc_update_qty' ) {
+					announceStatus( i18n.updatedQty || i18n.updatedCart );
 				} else {
-					console.warn( 'Eva SC:', ( json.data && json.data.message ) || i18n.errorGeneric );
+					announceStatus( i18n.updatedCart );
 				}
+
 				return json;
 			} )
-			.catch( function () {
-				if ( itemRow ) {
-					itemRow.classList.remove( 'eva-sc-loading' );
+			.catch( function ( error ) {
+				var errorMessage = getErrorMessage( error, 0 );
+				showAlert( errorMessage, function () {
+					cartAjax( action, params, itemRow );
+				} );
+				console.warn( 'Eva SC:', errorMessage );
+				return null;
+			} )
+			.then( function ( result ) {
+				if ( timeoutId ) {
+					window.clearTimeout( timeoutId );
 				}
-				console.warn( 'Eva SC:', i18n.errorGeneric );
+				setRowLoading( itemRow, false );
+				delete pendingRequests[ requestKey ];
+				return result;
 			} );
+
+		pendingRequests[ requestKey ] = request;
+
+		return request;
 	}
 
 	// -------------------------------------------------------------------------
 	// Quantity stepper
 	// -------------------------------------------------------------------------
 	function updateQty( key, qty, itemRow ) {
+		if ( itemRow && itemRow.classList.contains( 'eva-sc-loading' ) ) {
+			return;
+		}
 		cartAjax( 'eva_sc_update_qty', { cart_item_key: key, quantity: qty }, itemRow );
 	}
 
@@ -276,10 +442,15 @@
 			if ( ! input ) {
 				return;
 			}
-			var key = input.dataset.key;
-			var qty = Math.max( 1, parseInt( input.value, 10 ) || 1 );
-			input.value = qty;
 			var row = input.closest( '.eva-sc-item' );
+			if ( row && row.classList.contains( 'eva-sc-loading' ) ) {
+				return;
+			}
+			var key = input.dataset.key;
+			var maxVal = input.getAttribute( 'max' ) ? parseInt( input.getAttribute( 'max' ), 10 ) : Infinity;
+			var qty = Math.max( 1, parseInt( input.value, 10 ) || 1 );
+			qty = Math.min( maxVal, qty );
+			input.value = qty;
 			updateQty( key, qty, row );
 		} );
 	}
@@ -304,6 +475,9 @@
 			}
 			var key = btn.dataset.key;
 			var row = btn.closest( '.eva-sc-item' );
+			if ( row && row.classList.contains( 'eva-sc-loading' ) ) {
+				return;
+			}
 			cartAjax( 'eva_sc_remove_item', { cart_item_key: key }, row );
 		} );
 	}
@@ -336,5 +510,10 @@
 	bindQtyHandlers();
 	bindRemoveHandlers();
 	initJQueryBridge();
+
+	window.addEventListener( 'online', function () {
+		hideAlert();
+		announceStatus( i18n.backOnline || 'Connection restored.' );
+	} );
 
 } () );

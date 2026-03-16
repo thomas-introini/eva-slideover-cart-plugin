@@ -25,9 +25,10 @@ class EVA_SC_Ajax {
 	 */
 	public function update_qty(): void {
 		$this->verify_nonce();
+		$this->ensure_cart_available();
 
 		$key = $this->get_cart_item_key();
-		$qty = isset( $_POST['quantity'] ) ? absint( $_POST['quantity'] ) : 0;
+		$qty = $this->get_quantity();
 
 		if ( empty( $key ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid cart item.', 'eva-slideover-cart' ) ], 400 );
@@ -39,9 +40,15 @@ class EVA_SC_Ajax {
 
 		if ( $qty < 1 ) {
 			// Treat quantity of 0 as removal.
-			WC()->cart->remove_cart_item( $key );
+			$removed = WC()->cart->remove_cart_item( $key );
+			if ( ! $removed ) {
+				wp_send_json_error( [ 'message' => __( 'Unable to update this cart item right now.', 'eva-slideover-cart' ) ], 409 );
+			}
 		} else {
-			WC()->cart->set_quantity( $key, $qty, true );
+			$updated = WC()->cart->set_quantity( $key, $qty, true );
+			if ( false === $updated ) {
+				wp_send_json_error( [ 'message' => __( 'Unable to update this cart item right now.', 'eva-slideover-cart' ) ], 409 );
+			}
 		}
 
 		wp_send_json_success( $this->build_fragment_response() );
@@ -52,6 +59,7 @@ class EVA_SC_Ajax {
 	 */
 	public function remove_item(): void {
 		$this->verify_nonce();
+		$this->ensure_cart_available();
 
 		$key = $this->get_cart_item_key();
 
@@ -63,7 +71,10 @@ class EVA_SC_Ajax {
 			wp_send_json_error( [ 'message' => __( 'Cart item not found.', 'eva-slideover-cart' ) ], 404 );
 		}
 
-		WC()->cart->remove_cart_item( $key );
+		$removed = WC()->cart->remove_cart_item( $key );
+		if ( ! $removed ) {
+			wp_send_json_error( [ 'message' => __( 'Unable to remove this cart item right now.', 'eva-slideover-cart' ) ], 409 );
+		}
 
 		wp_send_json_success( $this->build_fragment_response() );
 	}
@@ -82,6 +93,15 @@ class EVA_SC_Ajax {
 	}
 
 	/**
+	 * Ensure WooCommerce cart is available in this request context.
+	 */
+	private function ensure_cart_available(): void {
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+			wp_send_json_error( [ 'message' => __( 'Cart session unavailable. Please reload the page.', 'eva-slideover-cart' ) ], 503 );
+		}
+	}
+
+	/**
 	 * Retrieve and sanitise the cart item key from the request.
 	 *
 	 * @return string Sanitized key, or empty string on failure.
@@ -91,6 +111,24 @@ class EVA_SC_Ajax {
 			return '';
 		}
 		return wc_clean( wp_unslash( (string) $_POST['cart_item_key'] ) );
+	}
+
+	/**
+	 * Retrieve and validate quantity from request.
+	 *
+	 * @return int
+	 */
+	private function get_quantity(): int {
+		if ( ! isset( $_POST['quantity'] ) ) {
+			wp_send_json_error( [ 'message' => __( 'Quantity is required.', 'eva-slideover-cart' ) ], 400 );
+		}
+
+		$raw_qty = wc_clean( wp_unslash( (string) $_POST['quantity'] ) );
+		if ( '' === $raw_qty || ! is_numeric( $raw_qty ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid quantity.', 'eva-slideover-cart' ) ], 400 );
+		}
+
+		return max( 0, (int) wc_stock_amount( $raw_qty ) );
 	}
 
 	/**

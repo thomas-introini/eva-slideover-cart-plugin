@@ -50,9 +50,14 @@ class EVA_SC_Fragments {
 	 */
 	private function render_count(): string {
 		$count = WC()->cart->get_cart_contents_count();
+		$count_label = sprintf(
+			/* translators: %d: number of items in cart */
+			esc_attr( _n( '%d articolo nel carrello', '%d articoli nel carrello', $count, 'eva-slideover-cart' ) ),
+			$count
+		);
 		ob_start();
 		?>
-		<span class="eva-sc-count" aria-label="<?php esc_attr_e( 'Articoli nel carrello', 'eva-slideover-cart' ); ?>"><?php echo esc_html( (string) $count ); ?></span>
+		<span class="eva-sc-count" aria-label="<?php echo esc_attr( $count_label ); ?>"><?php echo esc_html( (string) $count ); ?></span>
 		<?php
 		return (string) ob_get_clean();
 	}
