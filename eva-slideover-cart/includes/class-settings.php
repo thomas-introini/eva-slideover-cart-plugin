@@ -89,29 +89,11 @@ class EVA_SC_Settings {
 		);
 
 		add_settings_field(
-			'free_shipping_threshold',
-			__( 'Free Shipping Threshold (€)', 'eva-slideover-cart' ),
-			[ $this, 'field_number' ],
+			'free_shipping_progress',
+			__( 'Free Shipping Progress', 'eva-slideover-cart' ),
+			[ $this, 'field_free_shipping_progress' ],
 			self::PAGE_SLUG,
-			self::SECTION_GENERAL,
-			[
-				'key'         => 'free_shipping_threshold',
-				'description' => __( 'Set to 0 to hide the free shipping progress bar.', 'eva-slideover-cart' ),
-				'min'         => 0,
-				'step'        => 0.01,
-			]
-		);
-
-		add_settings_field(
-			'free_shipping_excluded_classes',
-			__( 'Excluded Shipping Classes', 'eva-slideover-cart' ),
-			[ $this, 'field_shipping_classes' ],
-			self::PAGE_SLUG,
-			self::SECTION_GENERAL,
-			[
-				'key'         => 'free_shipping_excluded_classes',
-				'description' => __( 'Products with these shipping classes already include shipping. When every item in the cart belongs to one of these classes, the progress bar will show "free shipping" immediately.', 'eva-slideover-cart' ),
-			]
+			self::SECTION_GENERAL
 		);
 
 		// --- Disable theme cart section ---
@@ -271,6 +253,15 @@ class EVA_SC_Settings {
 		if ( ! empty( $args['description'] ) ) {
 			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
 		}
+	}
+
+	/**
+	 * Explain that the storefront mirrors WooCommerce's shipping configuration.
+	 */
+	public function field_free_shipping_progress(): void {
+		echo '<p class="description">';
+		esc_html_e( 'The drawer uses the applicable WooCommerce Free shipping method for the customer’s shipping zone, including its minimum order amount and coupon requirements. Configure this under WooCommerce → Settings → Shipping.', 'eva-slideover-cart' );
+		echo '</p>';
 	}
 
 	/**

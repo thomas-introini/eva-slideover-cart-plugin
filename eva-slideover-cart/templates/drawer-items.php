@@ -17,25 +17,39 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 		continue;
 	}
 
-	$product_id   = $product->get_id();
-	$qty          = (int) $cart_item['quantity'];
-	$product_url  = get_permalink( $product->get_id() );
-	$thumbnail    = $product->get_image( 'woocommerce_thumbnail', [ 'class' => 'eva-sc-item-thumb-img' ] );
+	$product_id  = $product->get_id();
+	$qty         = (int) $cart_item['quantity'];
+	$product_url = get_permalink( $product->get_id() );
+	$thumbnail   = $product->get_image( 'woocommerce_single', [ 'class' => 'eva-sc-item-thumb-img' ] );
 
-	// Max allowed quantity can vary by product type, stock rules, and purchase limits.
+	// Quantity limits account for product type, stock rules, and extension filters.
+	$min_qty = max( 1, (int) $product->get_min_purchase_quantity() );
 	$max_qty = $product->get_max_purchase_quantity();
 	$max_qty = is_numeric( $max_qty ) && (int) $max_qty > 0 ? (int) $max_qty : '';
 
-	// Variation data.
-	$variation_html = '';
-	if ( ! empty( $cart_item['variation'] ) ) {
-		$variation_html = wc_get_formatted_cart_item_data( $cart_item );
+	$is_sold_individually = $product->is_sold_individually();
+	$is_in_stock          = $product->is_in_stock();
+	$can_change_qty       = ! $is_sold_individually && $is_in_stock;
+	$is_on_backorder      = $product->is_on_backorder( $qty );
+
+	$quantity_status = '';
+	if ( $is_sold_individually ) {
+		$quantity_status = __( 'Limited to one per order.', 'eva-slideover-cart' );
+	} elseif ( ! $is_in_stock ) {
+		$quantity_status = __( 'This item is currently out of stock.', 'eva-slideover-cart' );
+	} elseif ( $is_on_backorder ) {
+		$quantity_status = __( 'Available on backorder.', 'eva-slideover-cart' );
+	} elseif ( '' !== $max_qty && $qty >= $max_qty ) {
+		$quantity_status = __( 'Maximum available quantity reached.', 'eva-slideover-cart' );
 	}
+
+	// Includes variations and extra data supplied by extensions, such as add-ons.
+	$item_meta_html = wc_get_formatted_cart_item_data( $cart_item );
 
 	// Line price (qty × unit price).
 	$line_price = wc_price( (float) $cart_item['line_total'] + (float) $cart_item['line_tax'] );
 	?>
-	<div class="eva-sc-item" data-key="<?php echo esc_attr( $cart_item_key ); ?>">
+	<div class="eva-sc-item" data-key="<?php echo esc_attr( $cart_item_key ); ?>" data-product-id="<?php echo esc_attr( (string) $product_id ); ?>">
 
 		<!-- Thumbnail -->
 		<div class="eva-sc-item-thumb">
@@ -50,57 +64,69 @@ foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 				<a href="<?php echo esc_url( $product_url ); ?>" dir="auto"><?php echo esc_html( $product->get_name() ); ?></a>
 			</p>
 
-			<?php if ( $variation_html ) : ?>
-				<div class="eva-sc-item-variation" dir="auto"><?php echo wp_kses_post( $variation_html ); ?></div>
+			<?php if ( $item_meta_html ) : ?>
+				<div class="eva-sc-item-meta eva-sc-item-variation" dir="auto"><?php echo wp_kses_post( $item_meta_html ); ?></div>
 			<?php endif; ?>
 
 			<p class="eva-sc-item-price"><?php echo wp_kses_post( $line_price ); ?></p>
 
-			<!-- Quantity stepper -->
-			<div class="eva-sc-qty-wrap">
-				<button
-					class="eva-sc-qty-btn eva-sc-qty-minus"
-					data-key="<?php echo esc_attr( $cart_item_key ); ?>"
-					aria-label="<?php esc_attr_e( 'Diminuisci quantita', 'eva-slideover-cart' ); ?>"
-					type="button"
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><line x1="2" y1="8" x2="14" y2="8"/></svg>
-				</button>
-				<input
-					class="eva-sc-qty-input"
-					type="number"
-					inputmode="numeric"
-					value="<?php echo esc_attr( (string) $qty ); ?>"
-					min="1"
-					<?php if ( '' !== $max_qty ) : ?>
-					max="<?php echo esc_attr( (string) $max_qty ); ?>"
-					<?php endif; ?>
-					step="1"
-					data-key="<?php echo esc_attr( $cart_item_key ); ?>"
-					aria-label="<?php esc_attr_e( 'Quantita', 'eva-slideover-cart' ); ?>"
-				>
-				<button
-					class="eva-sc-qty-btn eva-sc-qty-plus"
-					data-key="<?php echo esc_attr( $cart_item_key ); ?>"
+			<?php if ( $can_change_qty ) : ?>
+				<!-- Quantity stepper -->
+				<div
+					class="eva-sc-qty-wrap"
+					data-min="<?php echo esc_attr( (string) $min_qty ); ?>"
 					<?php if ( '' !== $max_qty ) : ?>
 					data-max="<?php echo esc_attr( (string) $max_qty ); ?>"
 					<?php endif; ?>
-					aria-label="<?php esc_attr_e( 'Aumenta quantita', 'eva-slideover-cart' ); ?>"
-					type="button"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-				</button>
-			</div>
+					<button
+						class="eva-sc-qty-btn eva-sc-qty-minus"
+						data-key="<?php echo esc_attr( $cart_item_key ); ?>"
+						aria-label="<?php esc_attr_e( 'Decrease quantity', 'eva-slideover-cart' ); ?>"
+						type="button"
+					>
+						<span class="eva-sc-control-symbol" aria-hidden="true">−</span>
+					</button>
+					<span
+						class="eva-sc-qty-value"
+						data-key="<?php echo esc_attr( $cart_item_key ); ?>"
+						aria-label="<?php esc_attr_e( 'Quantity', 'eva-slideover-cart' ); ?>"
+						aria-live="polite"
+					><?php echo esc_html( (string) $qty ); ?></span>
+					<button
+						class="eva-sc-qty-btn eva-sc-qty-plus"
+						data-key="<?php echo esc_attr( $cart_item_key ); ?>"
+						<?php if ( '' !== $max_qty && $qty >= $max_qty ) : ?>
+						disabled
+						<?php endif; ?>
+						aria-label="<?php esc_attr_e( 'Increase quantity', 'eva-slideover-cart' ); ?>"
+						type="button"
+					>
+						<span class="eva-sc-control-symbol" aria-hidden="true">+</span>
+					</button>
+				</div>
+			<?php else : ?>
+				<span
+					class="eva-sc-qty-static"
+					aria-label="<?php echo esc_attr( sprintf( __( 'Quantity: %d', 'eva-slideover-cart' ), $qty ) ); ?>"
+				>
+					<?php echo esc_html( sprintf( __( 'Qty: %d', 'eva-slideover-cart' ), $qty ) ); ?>
+				</span>
+			<?php endif; ?>
+
+			<?php if ( $quantity_status ) : ?>
+				<p class="eva-sc-stock-status"><?php echo esc_html( $quantity_status ); ?></p>
+			<?php endif; ?>
 		</div>
 
 		<!-- Remove button -->
 		<button
 			class="eva-sc-remove"
 			data-key="<?php echo esc_attr( $cart_item_key ); ?>"
-			aria-label="<?php echo esc_attr( sprintf( __( 'Rimuovi %s dal carrello', 'eva-slideover-cart' ), $product->get_name() ) ); ?>"
+			aria-label="<?php echo esc_attr( sprintf( __( 'Remove %s from cart', 'eva-slideover-cart' ), $product->get_name() ) ); ?>"
 			type="button"
 		>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+			<span class="eva-sc-control-symbol" aria-hidden="true">×</span>
 		</button>
 	</div>
 	<?php

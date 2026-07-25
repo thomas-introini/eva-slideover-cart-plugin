@@ -38,6 +38,9 @@ class EVA_SC_Ajax {
 			wp_send_json_error( [ 'message' => __( 'Cart item not found.', 'eva-slideover-cart' ) ], 404 );
 		}
 
+		$cart_item   = WC()->cart->get_cart()[ $key ];
+		$current_qty = isset( $cart_item['quantity'] ) ? (int) $cart_item['quantity'] : 0;
+
 		if ( $qty < 1 ) {
 			// Treat quantity of 0 as removal.
 			$removed = WC()->cart->remove_cart_item( $key );
@@ -45,9 +48,12 @@ class EVA_SC_Ajax {
 				wp_send_json_error( [ 'message' => __( 'Unable to update this cart item right now.', 'eva-slideover-cart' ) ], 409 );
 			}
 		} else {
+			$this->validate_quantity_request( $key, $cart_item, $current_qty, $qty );
+			wc_clear_notices();
 			$updated = WC()->cart->set_quantity( $key, $qty, true );
-			if ( false === $updated ) {
-				wp_send_json_error( [ 'message' => __( 'Unable to update this cart item right now.', 'eva-slideover-cart' ) ], 409 );
+			$actual_qty = isset( WC()->cart->get_cart()[ $key ]['quantity'] ) ? (int) WC()->cart->get_cart()[ $key ]['quantity'] : 0;
+			if ( false === $updated || $actual_qty !== $qty ) {
+				wp_send_json_error( $this->quantity_error_response( $key, $actual_qty ), 409 );
 			}
 		}
 
@@ -129,6 +135,98 @@ class EVA_SC_Ajax {
 		}
 
 		return max( 0, (int) wc_stock_amount( $raw_qty ) );
+	}
+
+	/**
+	 * Reject quantity changes that conflict with the product's purchase rules.
+	 *
+	 * @param string               $key         Cart item key.
+	 * @param array<string, mixed> $cart_item   WooCommerce cart item.
+	 * @param int                  $current_qty Current cart quantity.
+	 * @param int                  $requested   Requested cart quantity.
+	 */
+	private function validate_quantity_request( string $key, array $cart_item, int $current_qty, int $requested ): void {
+		$product = $cart_item['data'] ?? null;
+		if ( ! $product instanceof WC_Product || ! $product->exists() ) {
+			wp_send_json_error( [ 'message' => __( 'This product is no longer available.', 'eva-slideover-cart' ) ], 409 );
+		}
+
+		if ( $product->is_sold_individually() && $requested > 1 ) {
+			wp_send_json_error(
+				[
+					'message'       => __( 'This product is limited to one per order.', 'eva-slideover-cart' ),
+					'cart_item_key' => $key,
+					'actual_qty'    => $current_qty,
+				],
+				409
+			);
+		}
+
+		if ( ! $product->is_in_stock() && $requested > $current_qty ) {
+			wp_send_json_error(
+				[
+					'message'       => __( 'This item is out of stock and its quantity cannot be increased.', 'eva-slideover-cart' ),
+					'cart_item_key' => $key,
+					'actual_qty'    => $current_qty,
+				],
+				409
+			);
+		}
+
+		$min_qty = max( 1, (int) $product->get_min_purchase_quantity() );
+		if ( $requested < $min_qty ) {
+			wp_send_json_error(
+				[
+					'message'       => sprintf(
+						/* translators: %d: minimum product quantity. */
+						__( 'The minimum quantity for this product is %d.', 'eva-slideover-cart' ),
+						$min_qty
+					),
+					'cart_item_key' => $key,
+					'actual_qty'    => $current_qty,
+				],
+				409
+			);
+		}
+
+		$max_qty = $product->get_max_purchase_quantity();
+		if ( is_numeric( $max_qty ) && (int) $max_qty > 0 && $requested > (int) $max_qty ) {
+			wp_send_json_error(
+				[
+					'message'       => sprintf(
+						/* translators: %d: maximum product quantity. */
+						__( 'The maximum available quantity for this product is %d.', 'eva-slideover-cart' ),
+						(int) $max_qty
+					),
+					'cart_item_key' => $key,
+					'actual_qty'    => $current_qty,
+				],
+				409
+			);
+		}
+	}
+
+	/**
+	 * Build an actionable error payload after WooCommerce rejects a quantity.
+	 *
+	 * @param string $key        Cart item key.
+	 * @param int    $actual_qty Quantity retained by WooCommerce.
+	 * @return array<string, mixed>
+	 */
+	private function quantity_error_response( string $key, int $actual_qty ): array {
+		$notices = wc_get_notices( 'error' );
+		wc_clear_notices();
+
+		$message = __( 'Unable to update this cart item right now.', 'eva-slideover-cart' );
+		if ( ! empty( $notices[0]['notice'] ) ) {
+			$message = wp_strip_all_tags( (string) $notices[0]['notice'] );
+		}
+
+		return [
+			'message'       => $message,
+			'cart_item_key' => $key,
+			'actual_qty'    => $actual_qty,
+		];
 	}
 
 	/**

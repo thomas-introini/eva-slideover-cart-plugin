@@ -20,16 +20,16 @@ Eva Slideover Cart replaces the default WooCommerce mini-cart with a fast, elega
 
 * Right-side slide-in drawer with smooth CSS transition
 * Cart trigger button (shortcode + optional hook) — use anywhere in your theme
-* Free shipping progress bar with configurable threshold
+* Free shipping progress bar based on the applicable WooCommerce shipping-zone rule
 * Live cart updates via WooCommerce native fragments (no page reload)
-* AJAX quantity stepper (+/-) and item removal
+* Stock-aware AJAX quantity stepper (+/-) with debounced updates and item removal
 * Sticky footer with "View Cart" and "Checkout" CTAs
 * Empty cart state with "Continue Shopping" link
 * Three-tactic strategy to suppress the theme's own mini-cart:
   * Tactic A — Force theme_mod values to `false`
   * Tactic B — Remove specific action callbacks by hook + identifier
   * Tactic C — CSS `display:none` targeting for custom selectors
-* Fully accessible: ARIA dialog, focus trap, keyboard navigation, WCAG 2.5.5 touch targets
+* Fully accessible: ARIA dialog, inert background, focus trap, keyboard navigation, WCAG 2.5.5 touch targets
 * Mobile-first responsive layout (full-width on phones, 90vw on tablets)
 * iOS Safari scroll-lock fix; swipe-right to dismiss on touch devices
 * No external libraries — vanilla JS + plain CSS
@@ -67,7 +67,7 @@ The drawer shell is automatically injected into the page via `wp_body_open` (or 
 
 **Configure free shipping progress bar:**
 
-Set a threshold (e.g. `50`) in **WooCommerce → Slideover Cart → Free Shipping Threshold**. Set to `0` to hide the bar.
+Configure a **Free shipping** method in **WooCommerce → Settings → Shipping**. The drawer mirrors the customer’s applicable shipping-zone method, including its minimum order amount and coupon requirements.
 
 **Customise appearance:**
 

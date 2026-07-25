@@ -36,8 +36,8 @@ class EVA_SC_Fragments {
 		// Fragment: items list or empty state.
 		$fragments['div.eva-sc-items'] = $this->render_items();
 
-		// Fragment: subtotal row.
-		$fragments['div.eva-sc-subtotal'] = $this->render_subtotal();
+		// Fragment: footer state, subtotal, and cart actions.
+		$fragments['div.eva-sc-footer-bar'] = $this->render_footer();
 
 		// Fragment: free shipping progress bar.
 		$fragments['div.eva-sc-free-shipping'] = $this->render_free_shipping();
@@ -52,7 +52,7 @@ class EVA_SC_Fragments {
 		$count = WC()->cart->get_cart_contents_count();
 		$count_label = sprintf(
 			/* translators: %d: number of items in cart */
-			esc_attr( _n( '%d articolo nel carrello', '%d articoli nel carrello', $count, 'eva-slideover-cart' ) ),
+			esc_attr( _n( '%d item in cart', '%d items in cart', $count, 'eva-slideover-cart' ) ),
 			$count
 		);
 		ob_start();
@@ -83,16 +83,11 @@ class EVA_SC_Fragments {
 	}
 
 	/**
-	 * Render the subtotal wrapper div.
+	 * Render the footer wrapper div.
 	 */
-	private function render_subtotal(): string {
+	private function render_footer(): string {
 		ob_start();
-		?>
-		<div class="eva-sc-subtotal">
-			<span class="eva-sc-subtotal-label"><?php esc_html_e( 'Subtotale', 'eva-slideover-cart' ); ?></span>
-			<span class="eva-sc-subtotal-amount"><?php echo wp_kses_post( WC()->cart->get_cart_subtotal() ); ?></span>
-		</div>
-		<?php
+		EVA_SC_Render::load_template( 'drawer-footer.php' );
 		return (string) ob_get_clean();
 	}
 

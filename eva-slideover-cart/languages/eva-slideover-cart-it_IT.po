@@ -1,351 +1,350 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Thomas Introini
+# Italian translations for Eva Slideover Cart package.
+# Copyright (C) 2026 Thomas Introini
 # This file is distributed under the same license as the Eva Slideover Cart package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Automatically generated, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Eva Slideover Cart 1.1.1\n"
 "Report-Msgid-Bugs-To: https://github.com/your-org/eva-slideover-cart/issues\n"
 "POT-Creation-Date: 2026-07-23 19:12+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2026-07-23 19:12+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: eva-slideover-cart/templates/drawer.php:28
 msgid "Your cart"
-msgstr ""
+msgstr "Il tuo carrello"
 
 #: eva-slideover-cart/templates/drawer.php:35
 msgid "Cart"
-msgstr ""
+msgstr "Carrello"
 
 #: eva-slideover-cart/templates/drawer.php:36
 #: eva-slideover-cart/includes/class-assets.php:83
 msgid "Close cart"
-msgstr ""
+msgstr "Chiudi carrello"
 
 #: eva-slideover-cart/templates/drawer.php:58
 #: eva-slideover-cart/includes/class-assets.php:77
 msgid "Retry"
-msgstr ""
+msgstr "Riprova"
 
 #: eva-slideover-cart/templates/drawer-footer.php:16
 msgid "Subtotal"
-msgstr ""
+msgstr "Subtotale"
 
 #: eva-slideover-cart/templates/drawer-footer.php:20
 msgid "View cart"
-msgstr ""
+msgstr "Visualizza carrello"
 
 #: eva-slideover-cart/templates/drawer-footer.php:21
 msgid "Checkout"
-msgstr ""
+msgstr "Procedi al pagamento"
 
 #: eva-slideover-cart/templates/drawer-items.php:61
 msgid "Decrease quantity"
-msgstr ""
+msgstr "Diminuisci quantità"
 
 #: eva-slideover-cart/templates/drawer-items.php:77
 msgid "Quantity"
-msgstr ""
+msgstr "Quantità"
 
 #: eva-slideover-cart/templates/drawer-items.php:85
 msgid "Increase quantity"
-msgstr ""
+msgstr "Aumenta quantità"
 
 #: eva-slideover-cart/templates/drawer-items.php:97
 #, php-format
 msgid "Remove %s from cart"
-msgstr ""
+msgstr "Rimuovi %s dal carrello"
 
 #: eva-slideover-cart/templates/drawer-empty.php:16
 msgid "Your cart is empty."
-msgstr ""
+msgstr "Il tuo carrello è vuoto."
 
 #: eva-slideover-cart/templates/drawer-empty.php:18
 msgid "Continue shopping"
-msgstr ""
+msgstr "Continua gli acquisti"
 
 #: eva-slideover-cart/includes/class-render.php:47
 #: eva-slideover-cart/includes/class-fragments.php:55
 #, php-format
 msgid "%d item in cart"
 msgid_plural "%d items in cart"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d articolo nel carrello"
+msgstr[1] "%d articoli nel carrello"
 
 #: eva-slideover-cart/includes/class-render.php:60
 #: eva-slideover-cart/includes/class-assets.php:82
 msgid "Open cart"
-msgstr ""
+msgstr "Apri carrello"
 
 #: eva-slideover-cart/includes/class-plugin.php:226
 #, php-format
 msgid ""
 "<strong>Eva Slideover Cart</strong> requires %s to be installed and active."
-msgstr ""
+msgstr "<strong>Eva Slideover Cart</strong> richiede che %s sia installato e attivo."
 
 #: eva-slideover-cart/includes/class-ajax.php:34
 #: eva-slideover-cart/includes/class-ajax.php:69
 msgid "Invalid cart item."
-msgstr ""
+msgstr "Articolo del carrello non valido."
 
 #: eva-slideover-cart/includes/class-ajax.php:38
 #: eva-slideover-cart/includes/class-ajax.php:73
 msgid "Cart item not found."
-msgstr ""
+msgstr "Articolo del carrello non trovato."
 
 #: eva-slideover-cart/includes/class-ajax.php:45
 #: eva-slideover-cart/includes/class-ajax.php:147
 msgid "Unable to update this cart item right now."
-msgstr ""
+msgstr "Al momento non è possibile aggiornare questo articolo del carrello."
 
 #: eva-slideover-cart/includes/class-ajax.php:78
 msgid "Unable to remove this cart item right now."
-msgstr ""
+msgstr "Al momento non è possibile rimuovere questo articolo dal carrello."
 
 #: eva-slideover-cart/includes/class-ajax.php:93
 msgid "Security check failed."
-msgstr ""
+msgstr "Controllo di sicurezza non riuscito."
 
 #: eva-slideover-cart/includes/class-ajax.php:102
 msgid "Cart session unavailable. Please reload the page."
-msgstr ""
+msgstr "Sessione del carrello non disponibile. Ricarica la pagina."
 
 #: eva-slideover-cart/includes/class-ajax.php:125
 msgid "Quantity is required."
-msgstr ""
+msgstr "La quantità è obbligatoria."
 
 #: eva-slideover-cart/includes/class-ajax.php:130
 msgid "Invalid quantity."
-msgstr ""
+msgstr "Quantità non valida."
 
 #: eva-slideover-cart/includes/class-settings.php:41
 #: eva-slideover-cart/includes/class-settings.php:42
 msgid "Slideover Cart"
-msgstr ""
+msgstr "Carrello laterale"
 
 #: eva-slideover-cart/includes/class-settings.php:62
 msgid "General"
-msgstr ""
+msgstr "Generale"
 
 #: eva-slideover-cart/includes/class-settings.php:69
 msgid "Enable Slideover Cart"
-msgstr ""
+msgstr "Abilita il carrello laterale"
 
 #: eva-slideover-cart/includes/class-settings.php:75
 msgid "Activate the drawer cart on the frontend."
-msgstr ""
+msgstr "Attiva il carrello laterale sul frontend."
 
 #: eva-slideover-cart/includes/class-settings.php:81
 msgid "Open on Add to Cart"
-msgstr ""
+msgstr "Apri all’aggiunta al carrello"
 
 #: eva-slideover-cart/includes/class-settings.php:87
 msgid "Automatically open the cart drawer when a product is added to the cart."
-msgstr ""
+msgstr "Apri automaticamente il carrello laterale quando viene aggiunto un prodotto."
 
 #: eva-slideover-cart/includes/class-settings.php:93
 msgid "Free Shipping Progress"
-msgstr ""
+msgstr "Avanzamento spedizione gratuita"
 
 #: eva-slideover-cart/includes/class-settings.php:102
 msgid "Disable Theme Mini-Cart"
-msgstr ""
+msgstr "Disabilita il mini-carrello del tema"
 
 #: eva-slideover-cart/includes/class-settings.php:109
 msgid "Theme Mod Keys to Disable (Tactic A)"
-msgstr ""
+msgstr "Chiavi theme_mod da disabilitare (Strategia A)"
 
 #: eva-slideover-cart/includes/class-settings.php:115
 msgid ""
 "One theme_mod key per line. The plugin will force these to <code>false</"
 "code>. Example: <code>header_cart</code>"
-msgstr ""
+msgstr "Una chiave theme_mod per riga. Il plugin ne forzerà il valore a <code>false</code>. Esempio: <code>header_cart</code>"
 
 #: eva-slideover-cart/includes/class-settings.php:122
 msgid "Action Callbacks to Remove (Tactic B)"
-msgstr ""
+msgstr "Callback delle azioni da rimuovere (Strategia B)"
 
 #: eva-slideover-cart/includes/class-settings.php:128
 msgid ""
 "One entry per line as <code>hook|identifier</code>. Identifier is a function "
 "name or <code>ClassName::method</code>. Example: <code>wp_footer|Astra_Cart::"
 "render_cart</code>"
-msgstr ""
+msgstr "Una voce per riga nel formato <code>hook|identificatore</code>. L’identificatore è il nome di una funzione o <code>NomeClasse::metodo</code>. Esempio: <code>wp_footer|Astra_Cart::render_cart</code>"
 
 #: eva-slideover-cart/includes/class-settings.php:135
 msgid "CSS Selectors to Hide (Tactic C)"
-msgstr ""
+msgstr "Selettori CSS da nascondere (Strategia C)"
 
 #: eva-slideover-cart/includes/class-settings.php:141
 msgid ""
 "One CSS selector per line. Matching elements will receive <code>display:"
 "none !important</code>. Example: <code>.site-header-cart</code>"
-msgstr ""
+msgstr "Un selettore CSS per riga. Gli elementi corrispondenti riceveranno <code>display:none !important</code>. Esempio: <code>.site-header-cart</code>"
 
 #: eva-slideover-cart/includes/class-settings.php:152
 msgid ""
 "Use one or more tactics below to suppress the theme's own mini-cart without "
 "editing theme files."
-msgstr ""
+msgstr "Utilizza una o più delle strategie seguenti per nascondere il mini-carrello del tema senza modificarne i file."
 
 #: eva-slideover-cart/includes/class-settings.php:198
 msgid "You do not have permission to access this page."
-msgstr ""
+msgstr "Non disponi dei permessi necessari per accedere a questa pagina."
 
 #: eva-slideover-cart/includes/class-settings.php:202
 msgid "Eva Slideover Cart"
-msgstr ""
+msgstr "Eva Slideover Cart"
 
 #: eva-slideover-cart/includes/class-settings.php:263
 msgid ""
 "The drawer uses the applicable WooCommerce Free shipping method for the "
 "customer’s shipping zone, including its minimum order amount and coupon "
 "requirements. Configure this under WooCommerce → Settings → Shipping."
-msgstr ""
+msgstr "Il carrello laterale utilizza il metodo di spedizione gratuita di WooCommerce applicabile alla zona di spedizione del cliente, inclusi l’importo minimo dell’ordine e i requisiti dei coupon. Configuralo in WooCommerce → Impostazioni → Spedizione."
 
 #: eva-slideover-cart/includes/class-settings.php:278
 msgid ""
 "No shipping classes found. Create them under WooCommerce → Settings → "
 "Shipping → Shipping classes."
-msgstr ""
+msgstr "Nessuna classe di spedizione trovata. Creale in WooCommerce → Impostazioni → Spedizione → Classi di spedizione."
 
 #: eva-slideover-cart/includes/class-assets.php:66
 msgid "Removing..."
-msgstr ""
+msgstr "Rimozione in corso..."
 
 #: eva-slideover-cart/includes/class-assets.php:67
 msgid "Updating..."
-msgstr ""
+msgstr "Aggiornamento in corso..."
 
 #: eva-slideover-cart/includes/class-assets.php:68
 msgid "Something went wrong. Please try again."
-msgstr ""
+msgstr "Qualcosa è andato storto. Riprova."
 
 #: eva-slideover-cart/includes/class-assets.php:69
 msgid "You are offline. Check your connection and try again."
-msgstr ""
+msgstr "Sei offline. Controlla la connessione e riprova."
 
 #: eva-slideover-cart/includes/class-assets.php:70
 msgid "The request took too long. Please try again."
-msgstr ""
+msgstr "La richiesta sta impiegando troppo tempo. Riprova."
 
 #: eva-slideover-cart/includes/class-assets.php:71
 msgid "Check the entered data and try again."
-msgstr ""
+msgstr "Controlla i dati inseriti e riprova."
 
 #: eva-slideover-cart/includes/class-assets.php:72
 msgid "Your session has expired or you do not have permission."
-msgstr ""
+msgstr "La sessione è scaduta oppure non disponi dei permessi necessari."
 
 #: eva-slideover-cart/includes/class-assets.php:73
 msgid "This item is no longer available in your cart."
-msgstr ""
+msgstr "Questo articolo non è più disponibile nel carrello."
 
 #: eva-slideover-cart/includes/class-assets.php:74
 msgid "Too many requests. Please wait and try again."
-msgstr ""
+msgstr "Troppe richieste. Attendi e riprova."
 
 #: eva-slideover-cart/includes/class-assets.php:75
 msgid "Temporary server error. Please try again shortly."
-msgstr ""
+msgstr "Errore temporaneo del server. Riprova tra poco."
 
 #: eva-slideover-cart/includes/class-assets.php:76
 msgid "Cart configuration is incomplete. Reload the page."
-msgstr ""
+msgstr "La configurazione del carrello è incompleta. Ricarica la pagina."
 
 #: eva-slideover-cart/includes/class-assets.php:78
 msgid "Cart updated."
-msgstr ""
+msgstr "Carrello aggiornato."
 
 #: eva-slideover-cart/includes/class-assets.php:79
 msgid "Quantity updated."
-msgstr ""
+msgstr "Quantità aggiornata."
 
 #: eva-slideover-cart/includes/class-assets.php:80
 msgid "Item removed from cart."
-msgstr ""
+msgstr "Articolo rimosso dal carrello."
 
 #: eva-slideover-cart/includes/class-assets.php:81
 msgid "Connection restored."
-msgstr ""
+msgstr "Connessione ripristinata."
 
 #: eva-slideover-cart/includes/class-free-shipping.php:51
 msgid "You qualify for free shipping!"
-msgstr ""
+msgstr "Hai diritto alla spedizione gratuita!"
 
 #: eva-slideover-cart/includes/class-free-shipping.php:54
 msgid "Apply a qualifying coupon for free shipping."
-msgstr ""
+msgstr "Applica un coupon valido per ottenere la spedizione gratuita."
 
 #: eva-slideover-cart/includes/class-free-shipping.php:58
 #, php-format
 msgid "Apply a qualifying coupon and add %s for free shipping."
-msgstr ""
+msgstr "Applica un coupon valido e aggiungi %s per ottenere la spedizione gratuita."
 
 #: eva-slideover-cart/includes/class-free-shipping.php:64
 #, php-format
 msgid "Add %s more for free shipping."
-msgstr ""
+msgstr "Aggiungi altri %s per ottenere la spedizione gratuita."
 
 #: eva-slideover-cart/includes/class-free-shipping.php:73
 msgid "Free shipping progress"
-msgstr ""
+msgstr "Avanzamento verso la spedizione gratuita"
 
 #: eva-slideover-cart/templates/drawer-items.php:37
 msgid "Limited to one per order."
-msgstr ""
+msgstr "Limitato a uno per ordine."
 
 #: eva-slideover-cart/templates/drawer-items.php:39
 msgid "This item is currently out of stock."
-msgstr ""
+msgstr "Questo articolo è attualmente esaurito."
 
 #: eva-slideover-cart/templates/drawer-items.php:41
 msgid "Available on backorder."
-msgstr ""
+msgstr "Disponibile su ordinazione."
 
 #: eva-slideover-cart/templates/drawer-items.php:43
 msgid "Maximum available quantity reached."
-msgstr ""
+msgstr "Quantità massima disponibile raggiunta."
 
 #: eva-slideover-cart/templates/drawer-items.php:111
 #, php-format
 msgid "Quantity: %d"
-msgstr ""
+msgstr "Quantità: %d"
 
 #: eva-slideover-cart/templates/drawer-items.php:113
 #, php-format
 msgid "Qty: %d"
-msgstr ""
+msgstr "Qtà: %d"
 
 #: eva-slideover-cart/includes/class-ajax.php:151
 msgid "This product is no longer available."
-msgstr ""
+msgstr "Questo prodotto non è più disponibile."
 
 #: eva-slideover-cart/includes/class-ajax.php:157
 msgid "This product is limited to one per order."
-msgstr ""
+msgstr "Questo prodotto è limitato a uno per ordine."
 
 #: eva-slideover-cart/includes/class-ajax.php:168
 msgid "This item is out of stock and its quantity cannot be increased."
-msgstr ""
+msgstr "Questo articolo è esaurito e non è possibile aumentarne la quantità."
 
 #. translators: %d: minimum product quantity.
 #: eva-slideover-cart/includes/class-ajax.php:182
 #, php-format
 msgid "The minimum quantity for this product is %d."
-msgstr ""
+msgstr "La quantità minima per questo prodotto è %d."
 
 #. translators: %d: maximum product quantity.
 #: eva-slideover-cart/includes/class-ajax.php:198
 #, php-format
 msgid "The maximum available quantity for this product is %d."
-msgstr ""
+msgstr "La quantità massima disponibile per questo prodotto è %d."

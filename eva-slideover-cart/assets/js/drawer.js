@@ -21,6 +21,7 @@
 	var i18n      = data.i18n      || {};
 	var requestTimeout = parseInt( data.requestTimeout, 10 ) || 15000;
 	var drawerPosition = data.position === 'left' ? 'left' : 'right';
+	var quantityDebounce = 400;
 
 	var overlay = document.querySelector( '.eva-sc-overlay' );
 	var drawer  = document.getElementById( 'eva-sc-drawer' );
@@ -30,7 +31,11 @@
 	var alertRetryBtn = drawer ? drawer.querySelector( '.eva-sc-alert-retry' ) : null;
 
 	var pendingRequests = {};
+	var quantityTimers = {};
+	var pendingVisualStates = {};
 	var retryAction = null;
+	var lastTrigger = null;
+	var inertedElements = [];
 
 	if ( ! overlay || ! drawer ) {
 		return;
@@ -85,6 +90,41 @@
 	// Body scroll lock: record scroll position before locking.
 	var scrollYBeforeLock = 0;
 
+	function setBackgroundInert( shouldInert ) {
+		if ( shouldInert ) {
+			inertedElements = [];
+			Array.prototype.forEach.call( document.body.children, function ( element ) {
+				if ( element === overlay || element === drawer || element.tagName === 'SCRIPT' || element.tagName === 'STYLE' ) {
+					return;
+				}
+				inertedElements.push( {
+					element: element,
+					inert: element.inert,
+					ariaHidden: element.getAttribute( 'aria-hidden' )
+				} );
+				element.inert = true;
+				element.setAttribute( 'aria-hidden', 'true' );
+			} );
+			return;
+		}
+
+		inertedElements.forEach( function ( state ) {
+			state.element.inert = state.inert;
+			if ( state.ariaHidden === null ) {
+				state.element.removeAttribute( 'aria-hidden' );
+			} else {
+				state.element.setAttribute( 'aria-hidden', state.ariaHidden );
+			}
+		} );
+		inertedElements = [];
+	}
+
+	function setTriggersExpanded( expanded ) {
+		document.querySelectorAll( '.eva-sc-trigger' ).forEach( function ( trigger ) {
+			trigger.setAttribute( 'aria-expanded', expanded ? 'true' : 'false' );
+		} );
+	}
+
 	// -------------------------------------------------------------------------
 	// Open / Close
 	// -------------------------------------------------------------------------
@@ -95,11 +135,9 @@
 		drawer.classList.add( 'eva-sc-open' );
 		drawer.setAttribute( 'aria-hidden', 'false' );
 		overlay.classList.add( 'eva-sc-open' );
-
-		var trigger = document.querySelector( '.eva-sc-trigger' );
-		if ( trigger ) {
-			trigger.setAttribute( 'aria-expanded', 'true' );
-		}
+		overlay.setAttribute( 'aria-hidden', 'false' );
+		setBackgroundInert( true );
+		setTriggersExpanded( true );
 
 		// Move focus to the close button for accessibility.
 		var closeBtn = drawer.querySelector( '.eva-sc-close' );
@@ -114,12 +152,14 @@
 		drawer.classList.remove( 'eva-sc-open' );
 		drawer.setAttribute( 'aria-hidden', 'true' );
 		overlay.classList.remove( 'eva-sc-open' );
+		overlay.setAttribute( 'aria-hidden', 'true' );
+		setBackgroundInert( false );
+		setTriggersExpanded( false );
 
-		var trigger = document.querySelector( '.eva-sc-trigger' );
-		if ( trigger ) {
-			trigger.setAttribute( 'aria-expanded', 'false' );
-			trigger.focus();
+		if ( lastTrigger && document.contains( lastTrigger ) ) {
+			lastTrigger.focus();
 		}
+		lastTrigger = null;
 	}
 
 	function isOpen() {
@@ -186,7 +226,9 @@
 	// -------------------------------------------------------------------------
 	document.addEventListener( 'click', function ( e ) {
 		// Trigger button.
-		if ( e.target.closest( '.eva-sc-trigger' ) ) {
+		var trigger = e.target.closest( '.eva-sc-trigger' );
+		if ( trigger ) {
+			lastTrigger = trigger;
 			isOpen() ? closeDrawer() : openDrawer();
 			return;
 		}
@@ -225,6 +267,30 @@
 					el.parentNode.replaceChild( newEl, el );
 				}
 			} );
+		} );
+		applyProductBackgroundColors();
+	}
+
+	/**
+	 * Copy a product card's --eva-bg-color custom property to the matching drawer
+	 * thumbnail. Custom properties do not inherit between separate DOM trees.
+	 */
+	function applyProductBackgroundColors() {
+		drawer.querySelectorAll( '.eva-sc-item[data-product-id]' ).forEach( function ( item ) {
+			var productId = item.dataset.productId;
+			var cardButton = document.querySelector( '.add_to_cart_button[data-product_id="' + productId + '"]' );
+			var productCard = cardButton ? cardButton.closest( '.product, .wc-block-product' ) : null;
+			var colorSource = productCard || cardButton;
+			var thumbnail = item.querySelector( '.eva-sc-item-thumb' );
+
+			if ( ! colorSource || ! thumbnail ) {
+				return;
+			}
+
+			var backgroundColor = window.getComputedStyle( colorSource ).getPropertyValue( '--eva-bg-color' ).trim();
+			if ( backgroundColor ) {
+				thumbnail.style.setProperty( '--eva-sc-item-image-bg', backgroundColor );
+			}
 		} );
 	}
 
@@ -271,11 +337,24 @@
 		return action + ':' + ( params.cart_item_key || 'global' );
 	}
 
-	function setRowLoading( itemRow, isLoading ) {
+	function setCartUpdating( requestKey, isUpdating ) {
+		if ( isUpdating ) {
+			pendingVisualStates[ requestKey ] = true;
+		} else {
+			delete pendingVisualStates[ requestKey ];
+		}
+
+		var hasPendingUpdates = Object.keys( pendingVisualStates ).length > 0;
+		document.documentElement.classList.toggle( 'eva-sc-cart-updating', hasPendingUpdates );
+		drawer.setAttribute( 'aria-busy', hasPendingUpdates ? 'true' : 'false' );
+	}
+
+	function setRowLoading( itemRow, isLoading, isQuantityUpdate ) {
 		if ( ! itemRow ) {
 			return;
 		}
-		itemRow.classList.toggle( 'eva-sc-loading', !! isLoading );
+		itemRow.classList.toggle( 'eva-sc-loading', !! isLoading && ! isQuantityUpdate );
+		itemRow.classList.toggle( 'eva-sc-qty-loading', !! isLoading && !! isQuantityUpdate );
 		if ( isLoading ) {
 			itemRow.setAttribute( 'aria-busy', 'true' );
 		} else {
@@ -283,19 +362,30 @@
 		}
 	}
 
-	function cartAjax( action, params, itemRow ) {
+	function cartAjax( action, params, itemRow, options ) {
+		options = options || {};
 		var requestKey = getRequestKey( action, params );
-		if ( pendingRequests[ requestKey ] ) {
-			return pendingRequests[ requestKey ];
+		var existingRequest = pendingRequests[ requestKey ];
+		if ( existingRequest ) {
+			if ( ! options.cancelPrevious ) {
+				return existingRequest.promise;
+			}
+			existingRequest.superseded = true;
+			if ( existingRequest.controller ) {
+				existingRequest.controller.abort();
+			}
 		}
 
 		if ( ! ajaxUrl ) {
 			showAlert( i18n.errorConfig || i18n.errorGeneric );
+			setCartUpdating( requestKey, false );
+			setRowLoading( itemRow, false, action === 'eva_sc_update_qty' );
 			return Promise.resolve();
 		}
 
 		hideAlert();
-		setRowLoading( itemRow, true );
+		setCartUpdating( requestKey, true );
+		setRowLoading( itemRow, true, action === 'eva_sc_update_qty' );
 
 		var body = new URLSearchParams( {
 			action: action,
@@ -325,6 +415,12 @@
 			fetchOptions.signal = controller.signal;
 		}
 
+		var requestEntry = {
+			controller: controller,
+			promise: null,
+			superseded: false,
+		};
+
 		var request = fetch( ajaxUrl, fetchOptions )
 			.then( function ( res ) {
 				return res.text().then( function ( text ) {
@@ -344,10 +440,14 @@
 				var response = payload.res;
 				var json = payload.json;
 
+				if ( pendingRequests[ requestKey ] !== requestEntry ) {
+					return json;
+				}
+
 				if ( ! json || ! json.success || ! json.data || ! json.data.fragments ) {
 					var errorMessage = ( json && json.data && json.data.message ) || getStatusMessage( response.status );
 					showAlert( errorMessage, function () {
-						cartAjax( action, params, itemRow );
+						cartAjax( action, params, itemRow, options );
 					} );
 					console.warn( 'Eva SC:', errorMessage );
 					return json;
@@ -367,9 +467,12 @@
 				return json;
 			} )
 			.catch( function ( error ) {
+				if ( requestEntry.superseded ) {
+					return null;
+				}
 				var errorMessage = getErrorMessage( error, 0 );
 				showAlert( errorMessage, function () {
-					cartAjax( action, params, itemRow );
+					cartAjax( action, params, itemRow, options );
 				} );
 				console.warn( 'Eva SC:', errorMessage );
 				return null;
@@ -378,12 +481,16 @@
 				if ( timeoutId ) {
 					window.clearTimeout( timeoutId );
 				}
-				setRowLoading( itemRow, false );
-				delete pendingRequests[ requestKey ];
+				if ( pendingRequests[ requestKey ] === requestEntry ) {
+					setRowLoading( itemRow, false, action === 'eva_sc_update_qty' );
+					setCartUpdating( requestKey, false );
+					delete pendingRequests[ requestKey ];
+				}
 				return result;
 			} );
 
-		pendingRequests[ requestKey ] = request;
+		requestEntry.promise = request;
+		pendingRequests[ requestKey ] = requestEntry;
 
 		return request;
 	}
@@ -392,10 +499,65 @@
 	// Quantity stepper
 	// -------------------------------------------------------------------------
 	function updateQty( key, qty, itemRow ) {
-		if ( itemRow && itemRow.classList.contains( 'eva-sc-loading' ) ) {
+		cartAjax(
+			'eva_sc_update_qty',
+			{ cart_item_key: key, quantity: qty },
+			itemRow,
+			{ cancelPrevious: true }
+		).then( function ( json ) {
+			if ( ! json || json.success || ! json.data || typeof json.data.actual_qty === 'undefined' ) {
+				return;
+			}
+
+			var value = getQtyValue( key );
+			if ( value ) {
+				value.textContent = json.data.actual_qty;
+			}
+			syncQtyControls( itemRow, json.data.actual_qty );
+		} );
+	}
+
+	function scheduleQtyUpdate( key, qty, itemRow ) {
+		var requestKey = getRequestKey( 'eva_sc_update_qty', { cart_item_key: key } );
+		if ( quantityTimers[ key ] ) {
+			window.clearTimeout( quantityTimers[ key ] );
+		}
+		setCartUpdating( requestKey, true );
+		setRowLoading( itemRow, true, true );
+		quantityTimers[ key ] = window.setTimeout( function () {
+			delete quantityTimers[ key ];
+			updateQty( key, qty, itemRow );
+		}, quantityDebounce );
+	}
+
+	function cancelQuantityUpdate( key ) {
+		var requestKey = getRequestKey( 'eva_sc_update_qty', { cart_item_key: key } );
+		var request = pendingRequests[ requestKey ];
+
+		if ( quantityTimers[ key ] ) {
+			window.clearTimeout( quantityTimers[ key ] );
+			delete quantityTimers[ key ];
+		}
+		if ( request ) {
+			request.superseded = true;
+			if ( request.controller ) {
+				request.controller.abort();
+			}
+			delete pendingRequests[ requestKey ];
+		}
+		setCartUpdating( requestKey, false );
+	}
+
+	function syncQtyControls( itemRow, qty ) {
+		if ( ! itemRow ) {
 			return;
 		}
-		cartAjax( 'eva_sc_update_qty', { cart_item_key: key, quantity: qty }, itemRow );
+		var wrap = itemRow.querySelector( '.eva-sc-qty-wrap' );
+		var plusBtn = itemRow.querySelector( '.eva-sc-qty-plus' );
+		var maxVal = wrap && wrap.dataset.max ? parseInt( wrap.dataset.max, 10 ) : Infinity;
+		if ( plusBtn ) {
+			plusBtn.disabled = qty >= maxVal;
+		}
 	}
 
 	function bindQtyHandlers() {
@@ -406,18 +568,26 @@
 		}
 
 		body.addEventListener( 'click', function ( e ) {
-			var minusBtn, plusBtn, key, input, current, next, maxVal, row;
+			var minusBtn, plusBtn, key, value, current, next, minVal, maxVal, row, wrap;
 
 			// Minus.
 			minusBtn = e.target.closest( '.eva-sc-qty-minus' );
 			if ( minusBtn ) {
 				key     = minusBtn.dataset.key;
-				input   = getQtyInput( key );
-				current = input ? parseInt( input.value, 10 ) : 1;
-				next    = Math.max( 1, current - 1 );
-				if ( input ) { input.value = next; }
+				value   = getQtyValue( key );
+				current = value ? parseInt( value.textContent, 10 ) : 1;
 				row = minusBtn.closest( '.eva-sc-item' );
-				updateQty( key, next, row );
+				wrap = minusBtn.closest( '.eva-sc-qty-wrap' );
+				minVal = wrap && wrap.dataset.min ? parseInt( wrap.dataset.min, 10 ) : 1;
+				if ( current <= minVal ) {
+					cancelQuantityUpdate( key );
+					cartAjax( 'eva_sc_remove_item', { cart_item_key: key }, row );
+					return;
+				}
+				next = current - 1;
+				if ( value ) { value.textContent = next; }
+				syncQtyControls( row, next );
+				scheduleQtyUpdate( key, next, row );
 				return;
 			}
 
@@ -425,38 +595,23 @@
 			plusBtn = e.target.closest( '.eva-sc-qty-plus' );
 			if ( plusBtn ) {
 				key     = plusBtn.dataset.key;
-				input   = getQtyInput( key );
-				current = input ? parseInt( input.value, 10 ) : 1;
-				maxVal  = plusBtn.dataset.max ? parseInt( plusBtn.dataset.max, 10 ) : Infinity;
+				value   = getQtyValue( key );
+				current = value ? parseInt( value.textContent, 10 ) : 1;
+				row     = plusBtn.closest( '.eva-sc-item' );
+				wrap    = plusBtn.closest( '.eva-sc-qty-wrap' );
+				maxVal  = wrap && wrap.dataset.max ? parseInt( wrap.dataset.max, 10 ) : Infinity;
 				next    = Math.min( maxVal, current + 1 );
-				if ( input ) { input.value = next; }
-				row = plusBtn.closest( '.eva-sc-item' );
-				updateQty( key, next, row );
+				if ( value ) { value.textContent = next; }
+				syncQtyControls( row, next );
+				scheduleQtyUpdate( key, next, row );
 				return;
 			}
 		} );
 
-		// Direct input change.
-		body.addEventListener( 'change', function ( e ) {
-			var input = e.target.closest( '.eva-sc-qty-input' );
-			if ( ! input ) {
-				return;
-			}
-			var row = input.closest( '.eva-sc-item' );
-			if ( row && row.classList.contains( 'eva-sc-loading' ) ) {
-				return;
-			}
-			var key = input.dataset.key;
-			var maxVal = input.getAttribute( 'max' ) ? parseInt( input.getAttribute( 'max' ), 10 ) : Infinity;
-			var qty = Math.max( 1, parseInt( input.value, 10 ) || 1 );
-			qty = Math.min( maxVal, qty );
-			input.value = qty;
-			updateQty( key, qty, row );
-		} );
 	}
 
-	function getQtyInput( key ) {
-		return drawer.querySelector( '.eva-sc-qty-input[data-key="' + key + '"]' );
+	function getQtyValue( key ) {
+		return drawer.querySelector( '.eva-sc-qty-value[data-key="' + key + '"]' );
 	}
 
 	// -------------------------------------------------------------------------
@@ -478,6 +633,7 @@
 			if ( row && row.classList.contains( 'eva-sc-loading' ) ) {
 				return;
 			}
+			cancelQuantityUpdate( key );
 			cartAjax( 'eva_sc_remove_item', { cart_item_key: key }, row );
 		} );
 	}
@@ -499,8 +655,7 @@
 
 		// Rebind handlers after Woo refreshes fragments (wc-cart-fragments.js).
 		jQuery( document.body ).on( 'wc_fragments_refreshed', function () {
-			// Handlers are already delegated on .eva-sc-body — no rebind needed.
-			// Re-apply any state-based UI if required in the future.
+			applyProductBackgroundColors();
 		} );
 	}
 
@@ -510,6 +665,7 @@
 	bindQtyHandlers();
 	bindRemoveHandlers();
 	initJQueryBridge();
+	applyProductBackgroundColors();
 
 	window.addEventListener( 'online', function () {
 		hideAlert();
