@@ -18,6 +18,9 @@ class EVA_SC_Ajax {
 
 		add_action( 'wp_ajax_eva_sc_remove_item',        [ $this, 'remove_item' ] );
 		add_action( 'wp_ajax_nopriv_eva_sc_remove_item', [ $this, 'remove_item' ] );
+
+		add_action( 'wp_ajax_eva_sc_restore_item',        [ $this, 'restore_item' ] );
+		add_action( 'wp_ajax_nopriv_eva_sc_restore_item', [ $this, 'restore_item' ] );
 	}
 
 	/**
@@ -61,6 +64,45 @@ class EVA_SC_Ajax {
 	}
 
 	/**
+	 * AJAX: restore a recently removed cart item.
+	 */
+	public function restore_item(): void {
+		$this->verify_nonce();
+		$this->ensure_cart_available();
+
+		$key = $this->get_cart_item_key();
+		if ( empty( $key ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid cart item.', 'eva-slideover-cart' ) ], 400 );
+		}
+
+		$removed_items = WC()->cart->get_removed_cart_contents();
+		$undo_item     = WC()->session->get( 'eva_sc_undo_item' );
+
+		if (
+			! array_key_exists( $key, $removed_items ) &&
+			is_array( $undo_item ) &&
+			isset( $undo_item['key'], $undo_item['cart_item'] ) &&
+			$key === $undo_item['key'] &&
+			is_array( $undo_item['cart_item'] )
+		) {
+			$removed_items[ $key ] = $undo_item['cart_item'];
+			WC()->cart->set_removed_cart_contents( $removed_items );
+		}
+
+		if ( ! array_key_exists( $key, $removed_items ) ) {
+			wp_send_json_error( [ 'message' => __( 'This item can no longer be restored.', 'eva-slideover-cart' ) ], 404 );
+		}
+
+		if ( ! WC()->cart->restore_cart_item( $key ) ) {
+			wp_send_json_error( [ 'message' => __( 'Unable to restore this cart item right now.', 'eva-slideover-cart' ) ], 409 );
+		}
+
+		WC()->session->set( 'eva_sc_undo_item', null );
+
+		wp_send_json_success( $this->build_fragment_response() );
+	}
+
+	/**
 	 * AJAX: remove a cart item.
 	 */
 	public function remove_item(): void {
@@ -80,6 +122,17 @@ class EVA_SC_Ajax {
 		$removed = WC()->cart->remove_cart_item( $key );
 		if ( ! $removed ) {
 			wp_send_json_error( [ 'message' => __( 'Unable to remove this cart item right now.', 'eva-slideover-cart' ) ], 409 );
+		}
+
+		$removed_items = WC()->cart->get_removed_cart_contents();
+		if ( isset( $removed_items[ $key ] ) ) {
+			WC()->session->set(
+				'eva_sc_undo_item',
+				[
+					'key'       => $key,
+					'cart_item' => $removed_items[ $key ],
+				]
+			);
 		}
 
 		wp_send_json_success( $this->build_fragment_response() );

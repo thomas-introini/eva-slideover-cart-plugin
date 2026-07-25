@@ -29,10 +29,15 @@
 	var alertBox = drawer ? drawer.querySelector( '.eva-sc-alert' ) : null;
 	var alertText = drawer ? drawer.querySelector( '.eva-sc-alert-text' ) : null;
 	var alertRetryBtn = drawer ? drawer.querySelector( '.eva-sc-alert-retry' ) : null;
+	var undoBox = drawer ? drawer.querySelector( '.eva-sc-undo' ) : null;
+	var undoMessage = drawer ? drawer.querySelector( '.eva-sc-undo-message' ) : null;
+	var undoLink = drawer ? drawer.querySelector( '.eva-sc-undo-link' ) : null;
 
 	var pendingRequests = {};
 	var quantityTimers = {};
 	var pendingVisualStates = {};
+	var undoItemKey = '';
+	var undoTimer = null;
 	var retryAction = null;
 	var lastTrigger = null;
 	var inertedElements = [];
@@ -43,6 +48,22 @@
 
 	if ( alertRetryBtn ) {
 		alertRetryBtn.textContent = i18n.retry || 'Retry';
+	}
+	if ( undoLink ) {
+		undoLink.textContent = i18n.undo || 'Undo';
+	}
+
+	function setUndoLinkEnabled( isEnabled ) {
+		if ( ! undoLink ) {
+			return;
+		}
+		if ( isEnabled ) {
+			undoLink.removeAttribute( 'aria-disabled' );
+			undoLink.classList.remove( 'eva-sc-undo-link--disabled' );
+			return;
+		}
+		undoLink.setAttribute( 'aria-disabled', 'true' );
+		undoLink.classList.add( 'eva-sc-undo-link--disabled' );
 	}
 
 	function announceStatus( message ) {
@@ -76,6 +97,32 @@
 		retryAction = null;
 	}
 
+	function hideUndo() {
+		if ( undoTimer ) {
+			window.clearTimeout( undoTimer );
+			undoTimer = null;
+		}
+		undoItemKey = '';
+		if ( undoBox ) {
+			undoBox.hidden = true;
+		}
+		setUndoLinkEnabled( true );
+	}
+
+	function showUndo( key ) {
+		if ( ! undoBox || ! undoMessage || ! undoLink ) {
+			return;
+		}
+		if ( undoTimer ) {
+			window.clearTimeout( undoTimer );
+		}
+		undoItemKey = key;
+		setUndoLinkEnabled( true );
+		undoMessage.textContent = i18n.removedItemUndo || 'Item removed from cart.';
+		undoBox.hidden = false;
+		undoTimer = window.setTimeout( hideUndo, 5000 );
+	}
+
 	if ( alertRetryBtn ) {
 		alertRetryBtn.addEventListener( 'click', function () {
 			if ( ! retryAction ) {
@@ -84,6 +131,18 @@
 			var run = retryAction;
 			hideAlert();
 			run();
+		} );
+	}
+
+	if ( undoLink ) {
+		undoLink.addEventListener( 'click', function ( e ) {
+			e.preventDefault();
+			var key = undoItemKey;
+			if ( ! key || undoLink.getAttribute( 'aria-disabled' ) === 'true' ) {
+				return;
+			}
+			setUndoLinkEnabled( false );
+			restoreItem( key );
 		} );
 	}
 
@@ -458,10 +517,16 @@
 
 				if ( action === 'eva_sc_remove_item' ) {
 					announceStatus( i18n.removedItem || i18n.updatedCart );
+				} else if ( action === 'eva_sc_restore_item' ) {
+					announceStatus( i18n.restoredItem || i18n.updatedCart );
 				} else if ( action === 'eva_sc_update_qty' ) {
 					announceStatus( i18n.updatedQty || i18n.updatedCart );
 				} else {
 					announceStatus( i18n.updatedCart );
+				}
+
+				if ( typeof options.onSuccess === 'function' ) {
+					options.onSuccess( json );
 				}
 
 				return json;
@@ -580,8 +645,7 @@
 				wrap = minusBtn.closest( '.eva-sc-qty-wrap' );
 				minVal = wrap && wrap.dataset.min ? parseInt( wrap.dataset.min, 10 ) : 1;
 				if ( current <= minVal ) {
-					cancelQuantityUpdate( key );
-					cartAjax( 'eva_sc_remove_item', { cart_item_key: key }, row );
+					removeItem( key, row );
 					return;
 				}
 				next = current - 1;
@@ -617,6 +681,35 @@
 	// -------------------------------------------------------------------------
 	// Remove item
 	// -------------------------------------------------------------------------
+	function removeItem( key, itemRow ) {
+		cancelQuantityUpdate( key );
+		cartAjax(
+			'eva_sc_remove_item',
+			{ cart_item_key: key },
+			itemRow,
+			{
+				onSuccess: function () {
+					showUndo( key );
+				}
+			}
+		);
+	}
+
+	function restoreItem( key ) {
+		cartAjax(
+			'eva_sc_restore_item',
+			{ cart_item_key: key },
+			null,
+			{
+				onSuccess: hideUndo
+			}
+		).then( function ( json ) {
+			if ( ! json || ! json.success ) {
+				setUndoLinkEnabled( true );
+			}
+		} );
+	}
+
 	function bindRemoveHandlers() {
 		var body = drawer.querySelector( '.eva-sc-body' );
 		if ( ! body ) {
@@ -633,8 +726,7 @@
 			if ( row && row.classList.contains( 'eva-sc-loading' ) ) {
 				return;
 			}
-			cancelQuantityUpdate( key );
-			cartAjax( 'eva_sc_remove_item', { cart_item_key: key }, row );
+			removeItem( key, row );
 		} );
 	}
 

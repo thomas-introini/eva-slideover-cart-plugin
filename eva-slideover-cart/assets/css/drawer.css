@@ -254,6 +254,7 @@ html.eva-sc-locked {
 .eva-sc-alert-retry {
   flex: 0 0 auto;
   min-height: 44px;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -264,6 +265,64 @@ html.eva-sc-locked {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+/* Recently removed item undo */
+.eva-sc-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eva-sc-spacing-sm);
+  flex-shrink: 0;
+  padding: var(--eva-sc-spacing-sm) var(--eva-sc-spacing);
+  border-top: 1px solid var(--eva-sc-color-border);
+  background: var(--eva-sc-color-secondary);
+}
+
+.eva-sc-undo[hidden] {
+  display: none;
+}
+
+.eva-sc-undo-message {
+  margin: 0;
+  min-width: 0;
+  color: var(--eva-sc-color-text);
+  font-size: var(--eva-sc-font-size-sm);
+  line-height: 1.4;
+}
+
+.eva-sc-undo-link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--eva-sc-touch-target);
+  padding: 8px 0;
+  color: var(--eva-sc-color-primary);
+  font-size: var(--eva-sc-font-size-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.eva-sc-undo-link:hover,
+.eva-sc-undo-link:focus-visible {
+  color: var(--eva-sc-color-primary-hover);
+  outline: none;
+}
+
+.eva-sc-undo-link:focus-visible {
+  outline: var(--eva-sc-focus-ring-width) solid var(--eva-sc-color-primary);
+  outline-offset: var(--eva-sc-focus-ring-offset);
+  border-radius: var(--eva-sc-radius-sm);
+}
+
+.eva-sc-undo-link.eva-sc-undo-link--disabled,
+.eva-sc-undo-link[aria-disabled="true"] {
+  color: var(--eva-sc-color-muted);
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -300,7 +359,7 @@ html.eva-sc-locked {
     opacity var(--eva-sc-transition-fast);
 }
 
-html.eva-sc-cart-updating .eva-sc-subtotal-amount,
+html.eva-sc-cart-updating .eva-sc-total-amount,
 html.eva-sc-cart-updating .eva-sc-count,
 html.eva-sc-cart-updating .eva-sc-progress-msg,
 .eva-sc-item.eva-sc-qty-loading .eva-sc-item-price {
@@ -616,21 +675,38 @@ html.eva-sc-cart-updating .eva-sc-progress-msg,
   background: var(--eva-sc-color-bg);
 }
 
-.eva-sc-subtotal {
+.eva-sc-totals {
+  display: grid;
+  gap: var(--eva-sc-spacing-xs);
+  margin-bottom: var(--eva-sc-spacing-sm);
+}
+
+.eva-sc-total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--eva-sc-spacing-sm);
   font-size: var(--eva-sc-font-size-md);
+  gap: var(--eva-sc-spacing-sm);
 }
 
-.eva-sc-subtotal-label {
+.eva-sc-total-label {
   color: var(--eva-sc-color-muted);
 }
 
-.eva-sc-subtotal-amount {
-  font-weight: 700;
+.eva-sc-total-amount {
   color: var(--eva-sc-color-text);
+  text-align: end;
+}
+
+.eva-sc-total {
+  margin-top: var(--eva-sc-spacing-xs);
+  padding-top: var(--eva-sc-spacing-sm);
+  border-top: 1px solid var(--eva-sc-color-border);
+}
+
+.eva-sc-total .eva-sc-total-label,
+.eva-sc-total .eva-sc-total-amount {
+  font-weight: 700;
 }
 
 .eva-sc-actions {
@@ -820,6 +896,10 @@ html.eva-sc-cart-updating .eva-sc-progress-msg,
 
   .eva-sc-title {
     font-size: 1rem;
+  }
+
+  .eva-sc-undo {
+    padding-bottom: calc(var(--eva-sc-spacing-sm) + env(safe-area-inset-bottom, 0px));
   }
 
   .eva-sc-item-name {

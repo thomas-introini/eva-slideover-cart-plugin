@@ -348,3 +348,48 @@ msgstr "La quantità minima per questo prodotto è %d."
 #, php-format
 msgid "The maximum available quantity for this product is %d."
 msgstr "La quantità massima disponibile per questo prodotto è %d."
+
+#: eva-slideover-cart/includes/class-ajax.php:101
+msgid "This item can no longer be restored."
+msgstr "Questo articolo non può più essere ripristinato."
+
+#: eva-slideover-cart/includes/class-ajax.php:105
+msgid "Unable to restore this cart item right now."
+msgstr "Impossibile ripristinare questo articolo del carrello al momento."
+
+#: eva-slideover-cart/templates/drawer.php:78
+#: eva-slideover-cart/includes/class-assets.php:85
+msgid "Undo"
+msgstr "Annulla"
+
+#: eva-slideover-cart/includes/class-assets.php:81
+msgid "Item removed."
+msgstr "Articolo rimosso."
+
+#: eva-slideover-cart/includes/class-assets.php:82
+msgid "Item restored to cart."
+msgstr "Articolo ripristinato nel carrello."
+
+#: eva-slideover-cart/templates/drawer-footer.php:18
+msgid "Shipping"
+msgstr "Spedizione"
+
+#: eva-slideover-cart/templates/drawer-footer.php:20
+msgid "Total so far"
+msgstr "Totale parziale"
+
+#: eva-slideover-cart/templates/drawer-footer.php:21
+msgid "Total"
+msgstr "Totale"
+
+#: eva-slideover-cart/templates/drawer-footer.php:23
+msgid "Calculated at checkout"
+msgstr "Calcolato al checkout"
+
+#: eva-slideover-cart/templates/drawer-footer.php:25
+msgid "Free"
+msgstr "Gratuita"
+
+#: eva-slideover-cart/includes/class-free-shipping.php:38
+msgid "Free shipping included!"
+msgstr "Spedizione gratuita inclusa!"

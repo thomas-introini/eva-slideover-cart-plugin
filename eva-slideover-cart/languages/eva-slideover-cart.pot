@@ -349,3 +349,48 @@ msgstr ""
 #, php-format
 msgid "The maximum available quantity for this product is %d."
 msgstr ""
+
+#: eva-slideover-cart/includes/class-ajax.php:101
+msgid "This item can no longer be restored."
+msgstr ""
+
+#: eva-slideover-cart/includes/class-ajax.php:105
+msgid "Unable to restore this cart item right now."
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer.php:78
+#: eva-slideover-cart/includes/class-assets.php:85
+msgid "Undo"
+msgstr ""
+
+#: eva-slideover-cart/includes/class-assets.php:81
+msgid "Item removed. Undo?"
+msgstr ""
+
+#: eva-slideover-cart/includes/class-assets.php:82
+msgid "Item restored to cart."
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer-footer.php:18
+msgid "Shipping"
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer-footer.php:20
+msgid "Total so far"
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer-footer.php:21
+msgid "Total"
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer-footer.php:23
+msgid "Calculated at checkout"
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer-footer.php:25
+msgid "Free"
+msgstr ""
+
+#: eva-slideover-cart/includes/class-free-shipping.php:38
+msgid "Free shipping included!"
+msgstr ""

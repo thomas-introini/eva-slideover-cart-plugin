@@ -72,6 +72,13 @@ $classes_str = implode( ' ', array_map( 'sanitize_html_class', $classes ) );
 		</div>
 	</div>
 
+	<div class="eva-sc-undo" role="status" aria-live="polite" aria-atomic="true" hidden>
+		<p class="eva-sc-undo-message"></p>
+		<a href="#" class="eva-sc-undo-link">
+			<?php esc_html_e( 'Undo', 'eva-slideover-cart' ); ?>
+		</a>
+	</div>
+
 	<?php do_action( 'eva_sc_after_items' ); ?>
 
 	<!-- Sticky footer bar -->

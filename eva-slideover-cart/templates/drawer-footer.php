@@ -12,9 +12,38 @@ defined( 'ABSPATH' ) || exit;
 
 $footer_html = '';
 if ( ! WC()->cart->is_empty() ) {
-	$footer_html = '<div class="eva-sc-subtotal">'
-		. '<span class="eva-sc-subtotal-label">' . esc_html__( 'Subtotal', 'eva-slideover-cart' ) . '</span>'
-		. '<span class="eva-sc-subtotal-amount">' . wp_kses_post( WC()->cart->get_cart_subtotal() ) . '</span>'
+	$needs_shipping = WC()->cart->needs_shipping();
+	if ( $needs_shipping ) {
+		EVA_SC_Free_Shipping::ensure_shipping_packages();
+	}
+
+	$shipping_amount         = WC()->cart->get_cart_shipping_total();
+	$has_shipping_cost       = (float) WC()->cart->get_shipping_total() > 0 || (float) WC()->cart->get_shipping_tax() > 0;
+	$qualifies_free_shipping = $needs_shipping && EVA_SC_Free_Shipping::qualifies_for_free_shipping();
+	$has_free_shipping_rate  = EVA_SC_Free_Shipping::has_zero_cost_shipping_rate();
+	$has_calculated_shipping = ! $needs_shipping || $qualifies_free_shipping || $has_free_shipping_rate || $has_shipping_cost || ( WC()->customer && WC()->customer->has_calculated_shipping() );
+	$shipping_label          = esc_html__( 'Shipping', 'eva-slideover-cart' );
+	$total_label             = $needs_shipping && ! $has_calculated_shipping
+		? esc_html__( 'Total so far', 'eva-slideover-cart' )
+		: esc_html__( 'Total', 'eva-slideover-cart' );
+	$shipping_value          = $qualifies_free_shipping || $has_free_shipping_rate
+		? esc_html__( 'Free', 'eva-slideover-cart' )
+		: ( $needs_shipping && ! $has_calculated_shipping
+		? esc_html__( 'Calculated at checkout', 'eva-slideover-cart' )
+		: $shipping_amount );
+
+	$footer_html = '<div class="eva-sc-totals">'
+		. '<div class="eva-sc-total-row eva-sc-subtotal">'
+		. '<span class="eva-sc-total-label">' . esc_html__( 'Subtotal', 'eva-slideover-cart' ) . '</span>'
+		. '<span class="eva-sc-total-amount">' . wp_kses_post( WC()->cart->get_cart_subtotal() ) . '</span>'
+		. '</div>'
+		. '<div class="eva-sc-total-row eva-sc-shipping">'
+		. '<span class="eva-sc-total-label">' . $shipping_label . '</span>'
+		. '<span class="eva-sc-total-amount">' . wp_kses_post( $shipping_value ) . '</span>'
+		. '</div>'
+		. '<div class="eva-sc-total-row eva-sc-total">'
+		. '<span class="eva-sc-total-label">' . $total_label . '</span>'
+		. '<span class="eva-sc-total-amount">' . wp_kses_post( WC()->cart->get_total() ) . '</span>'
 		. '</div>'
 		. '<div class="eva-sc-actions">'
 		. '<a href="' . esc_url( wc_get_cart_url() ) . '" class="eva-sc-btn eva-sc-btn--secondary">' . esc_html__( 'View cart', 'eva-slideover-cart' ) . '</a>'

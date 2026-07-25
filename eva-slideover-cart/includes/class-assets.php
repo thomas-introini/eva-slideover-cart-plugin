@@ -78,9 +78,12 @@ class EVA_SC_Assets {
 					'updatedCart'     => __( 'Cart updated.', 'eva-slideover-cart' ),
 					'updatedQty'      => __( 'Quantity updated.', 'eva-slideover-cart' ),
 					'removedItem'     => __( 'Item removed from cart.', 'eva-slideover-cart' ),
+					'removedItemUndo' => __( 'Item removed. Undo?', 'eva-slideover-cart' ),
+					'restoredItem'    => __( 'Item restored to cart.', 'eva-slideover-cart' ),
 					'backOnline'      => __( 'Connection restored.', 'eva-slideover-cart' ),
 					'openCart'        => __( 'Open cart', 'eva-slideover-cart' ),
 					'closeCart'       => __( 'Close cart', 'eva-slideover-cart' ),
+					'undo'            => __( 'Undo', 'eva-slideover-cart' ),
 				],
 			]
 		);

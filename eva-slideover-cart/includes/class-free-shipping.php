@@ -26,44 +26,50 @@ class EVA_SC_Free_Shipping {
 			return '';
 		}
 
-		$rule = self::resolve_rule();
-		if ( null === $rule ) {
+		$has_zero_cost_rate = self::has_zero_cost_shipping_rate();
+		$rule               = self::resolve_rule();
+		if ( null === $rule && ! $has_zero_cost_rate ) {
 			return '<div class="eva-sc-free-shipping"></div>';
 		}
 
-		$current = (float) apply_filters(
-			'eva_sc_free_shipping_current_amount',
-			self::get_eligible_subtotal( $rule['ignore_discounts'] )
-		);
-		$threshold        = (float) apply_filters( 'eva_sc_free_shipping_threshold', $rule['min_amount'] );
-		$has_coupon       = self::has_free_shipping_coupon();
-		$requires_coupon  = in_array( $rule['requires'], [ 'coupon', 'either', 'both' ], true );
-		$requires_minimum = in_array( $rule['requires'], [ 'min_amount', 'either', 'both' ], true );
-		$has_minimum      = ! $requires_minimum || $current >= $threshold;
-		$eligible         = ( 'either' === $rule['requires'] && ( $has_coupon || $has_minimum ) )
-			|| ( 'both' === $rule['requires'] && $has_coupon && $has_minimum )
-			|| ( 'coupon' === $rule['requires'] && $has_coupon )
-			|| ( 'min_amount' === $rule['requires'] && $has_minimum );
-		$remaining        = $requires_minimum ? max( 0.0, $threshold - $current ) : 0.0;
-		$percent          = $requires_minimum && $threshold > 0 ? min( 100, (int) round( ( $current / $threshold ) * 100 ) ) : 0;
-
-		if ( $eligible ) {
-			$message = esc_html__( 'You qualify for free shipping!', 'eva-slideover-cart' );
-			$percent = 100;
-		} elseif ( $requires_coupon && ! $has_coupon && ! $requires_minimum ) {
-			$message = esc_html__( 'Apply a qualifying coupon for free shipping.', 'eva-slideover-cart' );
-		} elseif ( 'both' === $rule['requires'] && ! $has_coupon ) {
-			$message = sprintf(
-				/* translators: %s: formatted price amount. */
-				esc_html__( 'Apply a qualifying coupon and add %s for free shipping.', 'eva-slideover-cart' ),
-				wp_kses_post( wc_price( $remaining ) )
-			);
+		if ( $has_zero_cost_rate ) {
+			$current   = 0.0;
+			$threshold = 0.0;
+			$remaining = 0.0;
+			$percent   = 100;
+			$message   = esc_html__( 'Free shipping included!', 'eva-slideover-cart' );
 		} else {
-			$message = sprintf(
-				/* translators: %s: formatted price amount. */
-				esc_html__( 'Add %s more for free shipping.', 'eva-slideover-cart' ),
-				wp_kses_post( wc_price( $remaining ) )
+			$current = (float) apply_filters(
+				'eva_sc_free_shipping_current_amount',
+				self::get_eligible_subtotal( $rule['ignore_discounts'] )
 			);
+			$threshold        = (float) apply_filters( 'eva_sc_free_shipping_threshold', $rule['min_amount'] );
+			$has_coupon       = self::has_free_shipping_coupon();
+			$requires_coupon  = in_array( $rule['requires'], [ 'coupon', 'either', 'both' ], true );
+			$requires_minimum = in_array( $rule['requires'], [ 'min_amount', 'either', 'both' ], true );
+			$has_minimum      = ! $requires_minimum || $current >= $threshold;
+			$eligible         = self::is_eligible( $rule['requires'], $has_coupon, $has_minimum );
+			$remaining        = $requires_minimum ? max( 0.0, $threshold - $current ) : 0.0;
+			$percent          = $requires_minimum && $threshold > 0 ? min( 100, (int) round( ( $current / $threshold ) * 100 ) ) : 0;
+
+			if ( $eligible ) {
+				$message = esc_html__( 'You qualify for free shipping!', 'eva-slideover-cart' );
+				$percent = 100;
+			} elseif ( $requires_coupon && ! $has_coupon && ! $requires_minimum ) {
+				$message = esc_html__( 'Apply a qualifying coupon for free shipping.', 'eva-slideover-cart' );
+			} elseif ( 'both' === $rule['requires'] && ! $has_coupon ) {
+				$message = sprintf(
+					/* translators: %s: formatted price amount. */
+					esc_html__( 'Apply a qualifying coupon and add %s for free shipping.', 'eva-slideover-cart' ),
+					wp_kses_post( wc_price( $remaining ) )
+				);
+			} else {
+				$message = sprintf(
+					/* translators: %s: formatted price amount. */
+					esc_html__( 'Add %s more for free shipping.', 'eva-slideover-cart' ),
+					wp_kses_post( wc_price( $remaining ) )
+				);
+			}
 		}
 
 		$description_id = 'eva-sc-free-shipping-message';
@@ -82,6 +88,122 @@ class EVA_SC_Free_Shipping {
 	}
 
 	/**
+	 * Determine whether the current cart meets the applicable free-shipping rule.
+	 */
+	public static function qualifies_for_free_shipping(): bool {
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+			return false;
+		}
+
+		$rule = self::resolve_rule();
+		if ( null === $rule ) {
+			return false;
+		}
+
+		$current          = self::get_eligible_subtotal( $rule['ignore_discounts'] );
+		$threshold        = (float) $rule['min_amount'];
+		$has_coupon       = self::has_free_shipping_coupon();
+		$requires_minimum = in_array( $rule['requires'], [ 'min_amount', 'either', 'both' ], true );
+		$has_minimum      = ! $requires_minimum || $current >= $threshold;
+
+		return self::is_eligible( $rule['requires'], $has_coupon, $has_minimum );
+	}
+
+	/**
+	 * Determine whether WooCommerce has a zero-cost shipping rate for the cart.
+	 *
+	 * Forces shipping calculation when needed so the drawer matches the cart page
+	 * for shipping-class and flat-rate free delivery.
+	 */
+	public static function has_zero_cost_shipping_rate(): bool {
+		$packages = self::ensure_shipping_packages();
+		if ( empty( $packages ) ) {
+			return false;
+		}
+
+		$chosen_methods = ( WC()->session ) ? (array) WC()->session->get( 'chosen_shipping_methods', [] ) : [];
+		$found_rate     = false;
+
+		foreach ( $packages as $index => $package ) {
+			if ( empty( $package['rates'] ) || ! is_array( $package['rates'] ) ) {
+				continue;
+			}
+
+			$rate = null;
+			if ( ! empty( $chosen_methods[ $index ] ) && isset( $package['rates'][ $chosen_methods[ $index ] ] ) ) {
+				$rate = $package['rates'][ $chosen_methods[ $index ] ];
+			} else {
+				foreach ( $package['rates'] as $candidate ) {
+					if ( ! is_object( $candidate ) || ! method_exists( $candidate, 'get_cost' ) ) {
+						continue;
+					}
+					if ( null === $rate || (float) $candidate->get_cost() < (float) $rate->get_cost() ) {
+						$rate = $candidate;
+					}
+				}
+			}
+
+			if ( ! $rate || ! method_exists( $rate, 'get_cost' ) ) {
+				continue;
+			}
+
+			$found_rate = true;
+			if ( (float) $rate->get_cost() > 0 ) {
+				return false;
+			}
+		}
+
+		return $found_rate;
+	}
+
+	/**
+	 * Ensure WooCommerce shipping packages include calculated rates for this request.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function ensure_shipping_packages(): array {
+		static $packages = null;
+
+		if ( null !== $packages ) {
+			return $packages;
+		}
+
+		$packages = [];
+
+		if ( ! function_exists( 'WC' ) || ! WC()->cart || ! WC()->shipping() || ! WC()->cart->needs_shipping() ) {
+			return $packages;
+		}
+
+		$existing = WC()->shipping()->get_packages();
+		foreach ( $existing as $package ) {
+			if ( ! empty( $package['rates'] ) ) {
+				$packages = $existing;
+				return $packages;
+			}
+		}
+
+		// Match cart-page behavior when shipping can be shown.
+		if ( WC()->cart->show_shipping() ) {
+			WC()->cart->calculate_shipping();
+			WC()->cart->calculate_totals();
+			$packages = WC()->shipping()->get_packages();
+			if ( ! empty( $packages ) ) {
+				return $packages;
+			}
+		}
+
+		// Fallback: calculate rates from cart packages even before an address is entered.
+		$cart_packages = WC()->cart->get_shipping_packages();
+		if ( empty( $cart_packages ) ) {
+			return $packages;
+		}
+
+		$packages = WC()->shipping()->calculate_shipping( $cart_packages );
+
+		return is_array( $packages ) ? $packages : [];
+	}
+
+	/**
 	 * Resolve the lowest minimum free-shipping method in the current zone.
 	 *
 	 * @return array{min_amount: float, requires: string, ignore_discounts: bool}|null
@@ -91,11 +213,11 @@ class EVA_SC_Free_Shipping {
 			return null;
 		}
 
-		$packages = WC()->cart->get_shipping_packages();
+		$packages = self::ensure_shipping_packages();
 		if ( empty( $packages ) ) {
-			$packages = WC()->shipping()->get_packages();
+			$packages = WC()->cart->get_shipping_packages();
 		}
-		$rules    = [];
+		$rules = [];
 
 		foreach ( $packages as $package ) {
 			$zone = WC_Shipping_Zones::get_zone_matching_package( $package );
@@ -142,6 +264,20 @@ class EVA_SC_Free_Shipping {
 		}
 
 		return max( 0.0, $total );
+	}
+
+	/**
+	 * Evaluate a free-shipping method's configured requirements.
+	 *
+	 * @param string $requires    Free-shipping requirement mode.
+	 * @param bool   $has_coupon  Whether a qualifying coupon is applied.
+	 * @param bool   $has_minimum Whether the spend threshold is met.
+	 */
+	private static function is_eligible( string $requires, bool $has_coupon, bool $has_minimum ): bool {
+		return ( 'either' === $requires && ( $has_coupon || $has_minimum ) )
+			|| ( 'both' === $requires && $has_coupon && $has_minimum )
+			|| ( 'coupon' === $requires && $has_coupon )
+			|| ( 'min_amount' === $requires && $has_minimum );
 	}
 
 	/**
