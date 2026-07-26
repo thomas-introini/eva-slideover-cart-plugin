@@ -122,6 +122,8 @@ For Font Awesome 5 Solid, use `font-family: 'Font Awesome 5 Free'` and `font-wei
 |--------|------|-------------|
 | `eva_sc_enabled` | bool | Enable/disable plugin |
 | `eva_sc_open_on_add_to_cart` | bool | Auto-open drawer on add-to-cart |
+| `eva_sc_open_drawer_on_load` | bool | One-shot open after classic add-to-cart redirect |
+| `eva_sc_suppress_add_to_cart_notice` | bool | Hide WooCommerce "added to cart" page notice when auto-open is enabled |
 | `eva_sc_drawer_position` | string | `right` or `left` |
 | `eva_sc_trigger_icon_html` | string | Icon markup (SVG, span, or i for Font Awesome) |
 | `eva_sc_trigger_html` | string | Trigger button markup |

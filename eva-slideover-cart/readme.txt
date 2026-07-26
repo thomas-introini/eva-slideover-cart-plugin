@@ -22,6 +22,8 @@ Eva Slideover Cart replaces the default WooCommerce mini-cart with a fast, elega
 * Cart trigger button (shortcode + optional hook) — use anywhere in your theme
 * Free shipping progress bar based on the applicable WooCommerce shipping-zone rule
 * Live cart updates via WooCommerce native fragments (no page reload)
+* Auto-open drawer on add-to-cart (AJAX and classic form POST + redirect, via session flag — no URL parameter)
+* Suppresses the WooCommerce "added to cart" page notice when auto-open is enabled (the drawer is the confirmation)
 * Stock-aware AJAX quantity stepper (+/-) with debounced updates and item removal
 * Five-second undo action after removing the most recent cart item
 * Live subtotal, shipping, and total breakdown; shipping is marked as calculated at checkout when no rate is available
@@ -91,6 +93,8 @@ Copy any file from `eva-slideover-cart/templates/` into `your-theme/eva-slideove
 
 * `eva_sc_enabled` — (bool) enable/disable plugin.
 * `eva_sc_open_on_add_to_cart` — (bool) auto-open drawer.
+* `eva_sc_open_drawer_on_load` — (bool) one-shot open after classic add-to-cart redirect.
+* `eva_sc_suppress_add_to_cart_notice` — (bool) hide WooCommerce "added to cart" page notice when auto-open is enabled.
 * `eva_sc_drawer_position` — (string) `right` or `left`.
 * `eva_sc_trigger_html` — (string) trigger button markup.
 * `eva_sc_drawer_header` — (string) drawer header markup.

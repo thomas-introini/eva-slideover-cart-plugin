@@ -12,6 +12,9 @@ defined( 'ABSPATH' ) || exit;
  */
 final class EVA_SC_Plugin {
 
+	/** WooCommerce session key: open drawer once on the next full page load. */
+	private const SESSION_OPEN_DRAWER = 'eva_sc_open_drawer';
+
 	/** @var EVA_SC_Plugin|null */
 	private static ?EVA_SC_Plugin $instance = null;
 
@@ -74,6 +77,9 @@ final class EVA_SC_Plugin {
 
 		// Disable theme cart output — runs after all plugins and themes have registered hooks.
 		add_action( 'wp_loaded', [ $this, 'disable_theme_cart_output' ], 20 );
+
+		add_action( 'woocommerce_add_to_cart', [ $this, 'flag_open_drawer_after_redirect' ], 10, 0 );
+		add_filter( 'wc_add_to_cart_message_html', [ $this, 'suppress_add_to_cart_notice' ], 10, 2 );
 	}
 
 	/**
@@ -97,6 +103,56 @@ final class EVA_SC_Plugin {
 	public function open_on_add_to_cart(): bool {
 		$value = (bool) eva_sc_get_option( 'open_on_add_to_cart', true );
 		return (bool) apply_filters( 'eva_sc_open_on_add_to_cart', $value );
+	}
+
+	/**
+	 * Remember to open the drawer after a classic (non-AJAX) add-to-cart redirect.
+	 */
+	public function flag_open_drawer_after_redirect(): void {
+		if ( ! $this->is_enabled() || ! $this->open_on_add_to_cart() || wp_doing_ajax() ) {
+			return;
+		}
+
+		if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+			return;
+		}
+
+		WC()->session->set( self::SESSION_OPEN_DRAWER, true );
+	}
+
+	/**
+	 * Hide WooCommerce "added to cart" notices when the drawer opens on add-to-cart.
+	 *
+	 * The slideover is the confirmation UI, so the page banner is redundant.
+	 *
+	 * @param string               $message  Notice HTML.
+	 * @param array<int, int>|int  $products Product ID => quantity map (or legacy product ID).
+	 * @return string
+	 */
+	public function suppress_add_to_cart_notice( string $message, $products = [] ): string {
+		if ( ! $this->is_enabled() || ! $this->open_on_add_to_cart() ) {
+			return $message;
+		}
+
+		$suppress = (bool) apply_filters( 'eva_sc_suppress_add_to_cart_notice', true, $products );
+
+		return $suppress ? '' : $message;
+	}
+
+	/**
+	 * Read and clear the one-shot open-drawer session flag.
+	 */
+	public function consume_open_drawer_flag(): bool {
+		if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+			return false;
+		}
+
+		$should_open = (bool) WC()->session->get( self::SESSION_OPEN_DRAWER, false );
+		if ( $should_open ) {
+			WC()->session->set( self::SESSION_OPEN_DRAWER, null );
+		}
+
+		return (bool) apply_filters( 'eva_sc_open_drawer_on_load', $should_open );
 	}
 
 	/**

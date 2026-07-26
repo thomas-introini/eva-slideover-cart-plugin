@@ -17,7 +17,8 @@
 	var data      = ( typeof evaScData !== 'undefined' ) ? evaScData : {};
 	var ajaxUrl   = data.ajaxUrl   || '';
 	var nonce     = data.nonce     || '';
-	var openOnAdd = !! data.openOnAdd;
+	var openOnAdd  = !! data.openOnAdd;
+	var openOnLoad = !! data.openOnLoad;
 	var i18n      = data.i18n      || {};
 	var requestTimeout = parseInt( data.requestTimeout, 10 ) || 15000;
 	var drawerPosition = data.position === 'left' ? 'left' : 'right';
@@ -758,6 +759,10 @@
 	bindRemoveHandlers();
 	initJQueryBridge();
 	applyProductBackgroundColors();
+
+	if ( openOnLoad ) {
+		openDrawer();
+	}
 
 	window.addEventListener( 'online', function () {
 		hideAlert();

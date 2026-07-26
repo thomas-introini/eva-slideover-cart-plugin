@@ -59,6 +59,7 @@ class EVA_SC_Assets {
 				'nonce'        => wp_create_nonce( 'eva_sc_nonce' ),
 				'requestTimeout' => (int) apply_filters( 'eva_sc_ajax_timeout_ms', 15000 ),
 				'openOnAdd'    => $plugin->open_on_add_to_cart(),
+				'openOnLoad'   => $plugin->open_on_add_to_cart() && $plugin->consume_open_drawer_flag(),
 				'position'     => $plugin->drawer_position(),
 				'wcCartUrl'    => wc_get_cart_url(),
 				'wcCheckoutUrl' => wc_get_checkout_url(),
