@@ -6,7 +6,7 @@
  *
  * Global: evaScData (wp_localize_script)
  */
-/* global evaScData, jQuery */
+/* global evaScData, jQuery, wc, wc_cart_fragments_params, wp */
 
 ( function () {
 	'use strict';
@@ -42,6 +42,11 @@
 	var retryAction = null;
 	var lastTrigger = null;
 	var inertedElements = [];
+	var cartSyncTimer = null;
+	var cartSyncController = null;
+	var cartSyncRequestId = 0;
+	var cartBlockSignature = '';
+	var cartBlockHasInitialState = false;
 
 	if ( ! overlay || ! drawer ) {
 		return;
@@ -354,11 +359,195 @@
 		} );
 	}
 
-	// Notify wc-cart-fragments to re-sync its session.
+	// Notify wc-cart-fragments to re-sync its session when the legacy runtime exists.
 	function triggerWooRefresh() {
-		if ( typeof jQuery !== 'undefined' ) {
+		if ( typeof jQuery !== 'undefined' && typeof wc_cart_fragments_params !== 'undefined' ) {
 			jQuery( document.body ).trigger( 'wc_fragment_refresh' );
 		}
+	}
+
+	/**
+	 * Silently fetch and apply the latest server-rendered drawer fragments.
+	 * This is the source of truth for classic and Cart Block cart updates.
+	 */
+	function syncDrawerFromServer() {
+		var requestId;
+		var controller;
+		var timeoutId = null;
+		var body;
+
+		if ( ! ajaxUrl ) {
+			return;
+		}
+
+		requestId = ++cartSyncRequestId;
+		if ( cartSyncController ) {
+			cartSyncController.abort();
+		}
+
+		controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+		cartSyncController = controller;
+		body = new URLSearchParams( {
+			action: 'eva_sc_refresh_cart',
+			nonce:  nonce,
+		} );
+
+		if ( controller ) {
+			timeoutId = window.setTimeout( function () {
+				controller.abort();
+			}, requestTimeout );
+		}
+
+		fetch(
+			ajaxUrl,
+			{
+				method:      'POST',
+				credentials: 'same-origin',
+				headers:     { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+				body:        body.toString(),
+				signal:      controller ? controller.signal : undefined,
+			}
+		)
+			.then( function ( response ) {
+				return response.json();
+			} )
+			.then( function ( json ) {
+				if (
+					requestId !== cartSyncRequestId ||
+					! json ||
+					! json.success ||
+					! json.data ||
+					! json.data.fragments
+				) {
+					return;
+				}
+
+				applyFragments( json.data.fragments );
+				triggerWooRefresh();
+			} )
+			.catch( function ( error ) {
+				if ( error && error.name !== 'AbortError' ) {
+					console.warn( 'Eva SC: unable to synchronize cart fragments.' );
+				}
+			} )
+			.then( function () {
+				if ( timeoutId ) {
+					window.clearTimeout( timeoutId );
+				}
+				if ( requestId === cartSyncRequestId ) {
+					cartSyncController = null;
+				}
+			} );
+	}
+
+	/**
+	 * Batch a group of externally triggered cart updates into one refresh.
+	 */
+	function scheduleDrawerSync() {
+		if ( cartSyncTimer ) {
+			window.clearTimeout( cartSyncTimer );
+		}
+
+		cartSyncTimer = window.setTimeout( function () {
+			cartSyncTimer = null;
+			syncDrawerFromServer();
+		}, 150 );
+	}
+
+	/**
+	 * Produce a stable comparison value for the Cart Block's Store API state.
+	 */
+	function getCartBlockSignature( cartData ) {
+		var items;
+		var coupons;
+
+		if ( ! cartData || typeof cartData !== 'object' ) {
+			return '';
+		}
+
+		items = ( cartData.items || [] ).map( function ( item ) {
+			return [ item.key || item.id || '', item.quantity || 0, item.total || '' ];
+		} );
+		coupons = ( cartData.coupons || [] ).map( function ( coupon ) {
+			return [ coupon.code || '', coupon.totals || '' ];
+		} );
+
+		return JSON.stringify( {
+			items:          items,
+			coupons:        coupons,
+			totals:         cartData.totals || {},
+			shippingRates:  cartData.shipping_rates || [],
+			shippingAddress: cartData.shipping_address || {},
+		} );
+	}
+
+	/**
+	 * Subscribe to Cart Block state changes after its Store API operation settles.
+	 */
+	function initCartBlockBridge() {
+		var cartStore;
+		var cartData;
+		var store;
+
+		if (
+			typeof wp === 'undefined' ||
+			! wp.data ||
+			typeof wp.data.select !== 'function' ||
+			typeof wp.data.subscribe !== 'function'
+		) {
+			return;
+		}
+
+		cartStore = (
+			typeof wc !== 'undefined' &&
+			wc.wcBlocksData &&
+			wc.wcBlocksData.cartStore
+		) ? wc.wcBlocksData.cartStore : 'wc/store/cart';
+
+		try {
+			store = wp.data.select( cartStore );
+			if ( ! store || typeof store.getCartData !== 'function' ) {
+				return;
+			}
+			cartData = store.getCartData();
+			cartBlockSignature = getCartBlockSignature( cartData );
+			cartBlockHasInitialState = !! cartData && Array.isArray( cartData.items );
+		} catch ( error ) {
+			return;
+		}
+
+		wp.data.subscribe( function () {
+			var store = wp.data.select( cartStore );
+			var nextCartData;
+			var nextSignature;
+
+			if ( ! store || typeof store.getCartData !== 'function' ) {
+				return;
+			}
+
+			if ( typeof store.hasPendingItemsOperations === 'function' && store.hasPendingItemsOperations() ) {
+				return;
+			}
+
+			nextCartData = store.getCartData();
+			nextSignature = getCartBlockSignature( nextCartData );
+			if ( ! nextSignature ) {
+				return;
+			}
+
+			if ( ! cartBlockHasInitialState ) {
+				cartBlockSignature = nextSignature;
+				cartBlockHasInitialState = true;
+				return;
+			}
+
+			if ( nextSignature === cartBlockSignature ) {
+				return;
+			}
+
+			cartBlockSignature = nextSignature;
+			scheduleDrawerSync();
+		}, cartStore );
 	}
 
 	// -------------------------------------------------------------------------
@@ -746,6 +935,12 @@
 			}
 		} );
 
+		// Re-sync drawer fragments after a traditional WooCommerce cart-page update.
+		// WooCommerce can emit multiple events for one update, so batch them.
+		jQuery( document.body ).on( 'updated_wc_div updated_cart_totals applied_coupon removed_coupon wc_cart_emptied', function () {
+			scheduleDrawerSync();
+		} );
+
 		// Rebind handlers after Woo refreshes fragments (wc-cart-fragments.js).
 		jQuery( document.body ).on( 'wc_fragments_refreshed', function () {
 			applyProductBackgroundColors();
@@ -758,6 +953,7 @@
 	bindQtyHandlers();
 	bindRemoveHandlers();
 	initJQueryBridge();
+	initCartBlockBridge();
 	applyProductBackgroundColors();
 
 	if ( openOnLoad ) {

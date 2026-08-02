@@ -21,12 +21,12 @@ Eva Slideover Cart replaces the default WooCommerce mini-cart with a fast, elega
 * Right-side slide-in drawer with smooth CSS transition
 * Cart trigger button (shortcode + optional hook) — use anywhere in your theme
 * Free shipping progress bar based on the applicable WooCommerce shipping-zone rule
-* Live cart updates via WooCommerce native fragments (no page reload)
+* Live cart updates via WooCommerce native fragments, including classic and Cart Block cart-page updates (no page reload)
 * Auto-open drawer on add-to-cart (AJAX and classic form POST + redirect, via session flag — no URL parameter)
 * Suppresses the WooCommerce "added to cart" page notice when auto-open is enabled (the drawer is the confirmation)
 * Stock-aware AJAX quantity stepper (+/-) with debounced updates and item removal
 * Five-second undo action after removing the most recent cart item
-* Live subtotal, shipping, and total breakdown; shipping is marked as calculated at checkout when no rate is available
+* Live subtotal, applied coupon effects, shipping, and total breakdown; shipping is marked as calculated at checkout when no rate is available
 * Sticky footer with "View Cart" and "Checkout" CTAs
 * Empty cart state with "Continue Shopping" link
 * Three-tactic strategy to suppress the theme's own mini-cart:

@@ -698,6 +698,11 @@ html.eva-sc-cart-updating .eva-sc-progress-msg,
   text-align: end;
 }
 
+.eva-sc-coupon .eva-sc-total-label,
+.eva-sc-coupon .eva-sc-total-amount {
+  color: var(--eva-sc-color-primary);
+}
+
 .eva-sc-total {
   margin-top: var(--eva-sc-spacing-xs);
   padding-top: var(--eva-sc-spacing-sm);

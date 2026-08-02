@@ -21,6 +21,19 @@ class EVA_SC_Ajax {
 
 		add_action( 'wp_ajax_eva_sc_restore_item',        [ $this, 'restore_item' ] );
 		add_action( 'wp_ajax_nopriv_eva_sc_restore_item', [ $this, 'restore_item' ] );
+
+		add_action( 'wp_ajax_eva_sc_refresh_cart',        [ $this, 'refresh_cart' ] );
+		add_action( 'wp_ajax_nopriv_eva_sc_refresh_cart', [ $this, 'refresh_cart' ] );
+	}
+
+	/**
+	 * AJAX: return current drawer fragments after an external cart update.
+	 */
+	public function refresh_cart(): void {
+		$this->verify_nonce();
+		$this->ensure_cart_available();
+
+		wp_send_json_success( $this->build_fragment_response() );
 	}
 
 	/**

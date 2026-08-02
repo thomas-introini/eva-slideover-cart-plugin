@@ -31,12 +31,43 @@ if ( ! WC()->cart->is_empty() ) {
 		: ( $needs_shipping && ! $has_calculated_shipping
 		? esc_html__( 'Calculated at checkout', 'eva-slideover-cart' )
 		: $shipping_amount );
+	$coupon_rows             = '';
+
+	foreach ( WC()->cart->get_applied_coupons() as $coupon_code ) {
+		$coupon          = new WC_Coupon( $coupon_code );
+		$discount_amount = (float) WC()->cart->get_coupon_discount_amount( $coupon_code, WC()->cart->display_cart_ex_tax );
+		$effects         = [];
+
+		if ( $discount_amount > 0 ) {
+			$effects[] = '-' . wc_price( $discount_amount );
+		}
+
+		if ( $coupon->get_free_shipping() ) {
+			$effects[] = esc_html__( 'Free shipping', 'eva-slideover-cart' );
+		}
+
+		if ( empty( $effects ) ) {
+			continue;
+		}
+
+		$coupon_rows .= '<div class="eva-sc-total-row eva-sc-coupon">'
+			. '<span class="eva-sc-total-label">'
+			. sprintf(
+				/* translators: %s: coupon code */
+				esc_html__( 'Coupon: %s', 'eva-slideover-cart' ),
+				esc_html( $coupon_code )
+			)
+			. '</span>'
+			. '<span class="eva-sc-total-amount">' . wp_kses_post( implode( ' <span aria-hidden="true">·</span> ', $effects ) ) . '</span>'
+			. '</div>';
+	}
 
 	$footer_html = '<div class="eva-sc-totals">'
 		. '<div class="eva-sc-total-row eva-sc-subtotal">'
 		. '<span class="eva-sc-total-label">' . esc_html__( 'Subtotal', 'eva-slideover-cart' ) . '</span>'
 		. '<span class="eva-sc-total-amount">' . wp_kses_post( WC()->cart->get_cart_subtotal() ) . '</span>'
 		. '</div>'
+		. $coupon_rows
 		. '<div class="eva-sc-total-row eva-sc-shipping">'
 		. '<span class="eva-sc-total-label">' . $shipping_label . '</span>'
 		. '<span class="eva-sc-total-amount">' . wp_kses_post( $shipping_value ) . '</span>'

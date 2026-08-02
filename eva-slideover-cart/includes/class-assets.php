@@ -40,6 +40,14 @@ class EVA_SC_Assets {
 		if ( wp_script_is( 'wc-cart-fragments', 'registered' ) ) {
 			$js_deps[] = 'wc-cart-fragments';
 		}
+		if ( is_cart() ) {
+			if ( wp_script_is( 'wp-data', 'registered' ) ) {
+				$js_deps[] = 'wp-data';
+			}
+			if ( wp_script_is( 'wc-blocks-data-store', 'registered' ) ) {
+				$js_deps[] = 'wc-blocks-data-store';
+			}
+		}
 
 		wp_enqueue_script(
 			'eva-sc-drawer',

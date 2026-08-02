@@ -40,6 +40,15 @@ msgstr ""
 msgid "Subtotal"
 msgstr ""
 
+#: eva-slideover-cart/templates/drawer-footer.php:44
+#, php-format
+msgid "Coupon: %s"
+msgstr ""
+
+#: eva-slideover-cart/templates/drawer-footer.php:37
+msgid "Free shipping"
+msgstr ""
+
 #: eva-slideover-cart/templates/drawer-footer.php:20
 msgid "View cart"
 msgstr ""
